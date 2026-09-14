@@ -1,0 +1,41 @@
+.message-section { max-width: 700px; margin: 40px auto; padding: 0 20px; }
+
+.message-section h2 { color: #e0a934; margin-bottom: 20px; }
+
+.notif-item { position: relative; padding-right: 40px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 14px 18px; margin-bottom: 12px; }
+
+.notif-item.unread { border-color: #e0a934; background: #201a10; }
+
+.notif-item p { margin: 0 0 6px 0; color: #fff; }
+
+.notif-item small { color: #999; }
+
+.bell-icon { position: relative; font-size: 18px; margin-right: 10px; }
+
+a.notif-link { text-decoration: none; color: inherit; display: block; }
+
+a.notif-link:hover .notif-goto {text-decoration: underline; }
+
+.notif-goto { display: inline-block; margin-top: 6px; font-size: 13px; color: #e0a934; }
+
+.messages-header { display: flex; justify-content: center; align-items: center; }
+
+.btn-delete-all { background: transparent; border: 1px solid #e63946; color: #e63946; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+
+.btn-delete-all:hover { background: #e63946; color: #fff; }
+
+.notif-delete-form { position: absolute; top: 10px; right: 10px; margin: 0; }
+
+.btn-delete-notif {
+    background: transparent;
+    border: none;
+    color: #999;
+    font-size: 16px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px 8px;
+}
+
+.btn-delete-notif:hover { color: #e63946; }
+
+.desc { display: flex; justify-content: center; align-items: center; }

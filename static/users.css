@@ -1,0 +1,69 @@
+
+
+.users-section { max-width: 750px; margin: 2rem auto;padding: 0 1.5rem; }
+
+.users-section .tag {
+    font-size: 0.8rem;
+    color: var(--gold);
+    border: 1px solid var(--gold);
+    border-radius: 20px;
+    padding: 0.2rem 0.8rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: inline-block;
+    margin-bottom: 0.5rem;
+}
+
+.users-section h2 { font-size: 1.8rem; color: var(--white); margin: 0 0 0.3rem; }
+
+.users-section .desc { color: #888; font-size: 0.95rem; margin-bottom: 1.5rem; }
+
+.search-box { display: flex; gap: 0.6rem; margin-bottom: 1rem; }
+
+.search-box input {
+    flex: 1;
+    background: var(--gray);
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 0.6rem 1rem;
+    color: var(--white);
+    font-size: 0.95rem;
+    font-family: Georgia, serif;
+}
+
+.search-box input:focus { outline: none; border-color: var(--gold); }
+
+.search-box input::placeholder { color: #555; }
+
+.search-box button {
+    background: var(--gold);
+    color: #0a0aa0;
+    border: none;
+    padding: 0.6rem 1.4rem;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.search-box button:hover { opacity: 0.85; }
+
+.users-section .error-msg {
+    color: var(--accent);
+    font-size: 0.88rem;
+    background: rgba(232, 58, 47, 0.08);
+    border: 1px solid rgba(232, 58, 47, 0.25);
+    border-radius: 4px;
+    padding: 0.5rem 0.8rem;
+}
+
+@media (max-width: 600px) {
+    .users-section { padding: 0 1rem; }
+
+    .users-section h2 { font-size: 1.4rem; }
+
+    .search-box { flex-direction: column; }
+
+    .search-box button { width: 100%; }
+}

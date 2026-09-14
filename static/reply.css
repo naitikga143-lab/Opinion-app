@@ -1,0 +1,223 @@
+.reply-page { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem 5rem; }
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--gold);
+    text-decoration: none;
+    font-size: 0.9rem;
+    margin-bottom: 1.2rem;
+    opacity: 0.85;
+    transition: opacity 0.2s;
+}
+
+.back-link:hover { opacity: 1; text-decoration: underline; }
+
+.reply-heading { font-family: Georgia, serif; font-size: 1.8rem; color: var(--white); margin-bottom: 1.5rem; border-bottom: 1px solid var(--gray); padding-bottom: 0.8rem; }
+
+.original-comment { background: var(--gray); border-left: 3px solid var(--gold); border-radius: 8px; padding: 1.2rem 1.5rem; margin-bottom: 1.8rem; }
+
+.original-comment .meta { margin-bottom: 0.5rem; font-size: 0.85rem; color: #999; }
+
+.original-comment .comment-user { color: var(--gold); text-decoration: none; font-weight: 600; }
+
+.original-comment .comment-user:hover { text-decoration: underline; }
+
+.original-comment .text { color: var(--white); font-size: 1.05rem; line-height: 1.6; }
+
+.reply-error {
+    background: rgba(232, 58, 47, 0.12);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 0.8rem 1rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.reply-form { margin-bottom: 2rem; }
+
+.reply-form textarea,
+.chain-form textarea,
+.edit-form textarea {
+    width: 100%;
+    min-height: 90px;
+    background: var(--gray);
+    border: 1px solid #2a2a2a;
+    color: var(--white);
+    border-radius: 8px;
+    padding: 0.9rem;
+    font-family: Georgia, serif;
+    font-size: 0.95rem;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.reply-form textarea:focus,
+.chain-form textarea:focus,
+.edit-form textarea:focus { border-color: var(--gold); }
+
+.reply-form button[type="submit"],
+.chain-form button[type="submit"] {
+    margin-top: 0.7rem;
+    background: var(--gold);
+    color: var(--black);
+    border: none;
+    padding: 0.55rem 1.4rem;
+    border-radius: 6px;
+    font-weight: 700;
+    font-family: Georgia, serif;
+    cursor: pointer;
+    transition: transform 0.15s, opacity 0.2s;
+}
+
+.reply-form button[type="submit"]:hover,
+.chain-form button[type="submit"]:hover { transform: translateY(-1px); opacity: 0.9; }
+
+.replies-list { display: flex; flex-direction: column; gap: 1rem; }
+
+.no-replies { color: #888; font-style: italic; text-align: center; padding: 2rem 0; }
+
+.reply-card { scroll-margin-top: 90px; background: var(--gray); border: 1px solid #232323; border-radius: 10px; padding: 1.1rem 1.3rem; transition: border-color 0.2s; }
+
+.reply-card:hover { border-color: #333; }
+
+.reply-meta { margin-bottom: 0.5rem; font-size: 0.85rem; color: #999; }
+
+.reply-meta .comment-user { color: var(--gold); text-decoration: none; font-weight: 600; }
+
+.reply-meta .comment-user:hover { text-decoration: underline; }
+
+.edited-tag { font-size: 0.75rem; color: #777; font-style: italic; margin-left: 4px; }
+
+.reply-text {
+    color: var(--white);
+    font-size: 0.98rem;
+    line-height: 1.6;
+    margin-bottom: 0.6rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.toggle-reply-btn {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 0.7rem;
+    font-family: Georgia, serif;
+}
+
+.toggle-reply-btn:hover { text-decoration: underline; }
+
+.vote-row { display: flex; gap: 10px; margin: 0.6rem 0; }
+
+.vote-row button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: transparent;
+    border: 1px solid #333;
+    border-radius: 20px;
+    color: #bbb;
+    padding: 4px 12px;
+    font-size: 0.85rem;
+    font-family: Georgia, serif;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+.vote-row .btn-like:hover { border-color: var(--gold); color: var(--gold); }
+
+.vote-row .btn-dislike:hover { border-color: var(--accent); color: var(--accent); }
+
+.vote-row .btn-like.active { border-color: var(--gold); color: var(--gold); background: rgba(212, 168, 67, 0.1); }
+
+.vote-row .btn-dislike.active { border-color: var(--accent); color: var(--accent); background: rgba(232, 58, 47, 0.1); }
+
+.btn-edit,
+.btn-reply-chain,
+.chain-toggle-btn {
+    background: none;
+    border: 1px solid #2c2c2c;
+    color: #bbb;
+    padding: 5px 14px;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-family: Georgia, serif;
+    cursor: pointer;
+    margin: 4px 6px 4px 0;
+    transition: border-color 0.2s, color 0.2s;
+}
+
+.btn-edit:hover,
+.btn-reply-chain:hover,
+.chain-toggle-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+.btn-delete-reply {
+    background: none;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 5px 14px;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-family: Georgia, serif;
+    cursor: pointer;
+    margin: 4px 6px 4px 0;
+    transition: background 0.2s, color 0.2s;
+}
+
+.btn-delete-reply:hover { background: var(--accent); color: var(--white); }
+
+.edit-form,
+.chain-form { margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px dashed #2a2a2a; }
+
+.edit-form button[type="submit"] {
+    margin-top: 0.5rem;
+    background: var(--gold);
+    color: var(--black);
+    border: none;
+    padding: 5px 16px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-family: Georgia, serif;
+    cursor: pointer;
+}
+
+.delete-form { display: inline-block; }
+
+.chain-toggle-wrap { margin-top: 0.6rem; }
+
+.chain-list {
+    margin-top: 0.9rem;
+    margin-left: 1.4rem;
+    padding-left: 1rem;
+    border-left: 2px solid #262626;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+.chain-list .reply-card { background: #151515; }
+
+.chain-list .chain-list { border-left-color: #1e1e1e; }
+
+.chain-list .chain-list .reply-card { background: #101010; }
+
+@media (max-width: 600px) {
+    .reply-page { padding: 1.5rem 1rem 4rem; }
+
+    .reply-heading { font-size: 1.4rem; }
+
+    .chain-list {margin-left: 0.7rem; padding-left: 0.6rem; }
+
+    .vote-row button,
+    .btn-edit,
+    .btn-reply-chain,
+    .chain-toggle-btn,
+    .btn-delete-reply { font-size: 0.78rem; padding: 4px 10px; }
+}

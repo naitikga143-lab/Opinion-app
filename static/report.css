@@ -1,0 +1,56 @@
+
+.report-page {
+    background: var(--gray);
+    padding: 2.5rem;
+    border-radius: 8px;
+    width: 320px;
+    text-align: center;
+    border: 1px solid #222;
+    font-family: Georgia, serif;
+    color: var(--white);
+}
+
+.report-page h1 { margin-top: 0; margin-bottom: 1.5rem; color: var(--accent); font-size: 1.8rem; letter-spacing: 2px; text-transform: uppercase; }
+
+.report-options { display: flex; flex-direction: column; gap: 0.8rem; }
+
+.report-tag {
+    background: transparent;
+    border: 1px solid #444;
+    color: var(--white);
+    padding: 0.8rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: Georgia, serif;
+    font-size: 0.95rem;
+    text-align: left;
+    transition: all 0.2s ease;
+}
+
+.report-tag:hover { border-color: var(--accent); color: var(--accent); }
+
+.report-tag.selected { background: var(--accent); border-color: var(--accent); color: var(--white); }
+
+.confirm-box {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--gray);
+    border: 1px solid var(--accent);
+    padding: 1.5rem;
+    border-radius: 8px;
+    width: 260px;
+    text-align: center;
+    z-index: 10;
+}
+
+.confirm-box.active { display: block; }
+
+.confirm-actions { display: flex; justify-content: center; gap: 1rem; margin-top: 1rem; }
+
+.btn-confirm-yes { background: var(--accent); color: var(--white); border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
+
+.btn-confirm-no { background: transparent; border: 1px solid #444; color: var(--white); padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
+

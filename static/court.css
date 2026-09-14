@@ -1,0 +1,278 @@
+.court-tags {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem 3rem;
+    border-bottom: 1px solid #222;
+    background: var(--black);
+    flex-wrap: wrap;
+}
+
+.court-tag {
+    background: transparent;
+    border: 1px solid #444;
+    color: var(--white);
+    padding: 0.5rem 1.2rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-family: Georgia, serif;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: all 0.2s ease;
+}
+
+.court-tag:hover { border-color: var(--accent); color: var(--accent); }
+
+.court-tag.active { background: var(--accent); border-color: var(--accent); color: var(--white); }
+
+.court-entries { display: flex; flex-direction: column; gap: 1rem; padding: 1.5rem 3rem; }
+
+.court-card { scroll-margin-top: 90px; background: var(--gray); border: 1px solid #222; border-radius: 8px; padding: 1.2rem 1.5rem; font-family: Georgia, serif; }
+
+.court-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; } 
+
+.court-posted-by { color: var(--gold); font-size: 0.85rem; }
+
+.court-reported-by { color: var(--accent); font-size: 0.85rem; }
+
+.court-content { color: var(--white); text-align: center; font-size: 1.05rem; margin: 0.8rem 0; line-height: 1.5rem; }
+
+.court-card-footer { text-align: center; margin-top: 0.6rem; }
+
+.court-type { color: #aaa; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; }
+
+.court-empty { text-align: center; color: #aaa; padding: 2rem; }
+
+.court-vote-buttons { display: flex; gap: 0.8rem; margin-top: 0.8rem; justify-content: center; }
+
+.btn-delete-vote,
+.btn-keep-vote {
+    flex: 1;
+    max-width: 300px;
+    margin-top: 0;
+    background: transparent;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: Georgia, serif;
+    text-align: center;
+}
+
+.btn-delete-vote {
+    border: 1px solid var(--accent);
+    color: var(--accent);
+}
+
+.btn-delete-vote:hover { background: var(--accent); color: var(--white); }
+
+.btn-delete-vote:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.court-go-link {
+    color: var(--gold);
+    text-decoration: none;
+    font-size: 0.8rem;
+    border: 1px solid var(--gold);
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+}
+
+.court-go-link:hover { background: var(--gold); color: var(--black); }
+
+.btn-reason-toggle {
+    margin-top: 0.5rem;
+    background: transparent;
+    border: 1px solid #444;
+    color: var(--white);
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: Georgia, serif;
+    font-size: 0.8rem;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.reason-section { display: none; margin-top: 1rem; border-top: 1px solid #333; padding-top: 1rem; }
+
+.reason-section.open { display: block; }
+
+.reason-entry { background: #151515; border-radius: 6px; padding: 0.8rem; margin-bottom: 0.8rem; }
+
+.reason-readonly { color: #ddd; font-size: 0.9rem; margin-top: 0.4rem; }
+
+.reason-box { margin-bottom: 1rem; }
+
+.reason-warning { color: var(--accent); font-size: 0.75rem; font-style: italic; margin-bottom: 0.3rem; }
+
+.reason-box textarea {
+    width: 100%;
+    background: #0d0d0d;
+    border: 1px solid #444;
+    color: var(--white);
+    border-radius: 4px;
+    padding: 0.5rem;
+    font-family: Georgia, serif;
+    resize: vertical;
+    min-height: 60px;
+}
+
+.reason-box small { color: #888; font-size: 0.75rem; }
+
+.btn-reason-submit {
+    background: var(--accent);
+    color: var(--white);
+    border: none;
+    padding: 0.5rem 1.2rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: Georgia, serif;
+    display: block;
+    margin: 0 auto;
+}
+
+.btn-admin-delete {
+    margin-top: 0.8rem;
+    background: var(--accent);
+    border: none;
+    color: var(--white);
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: Georgia, serif;
+    font-size: 0.85rem;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.btn-admin-delete:hover { background: #c92e1f; }
+
+.court-vote-count { color: var(--accent); font-size: 0.85rem; font-weight: bold; }
+
+.admin-reasons { margin-top: 0.8rem; border-top: 1px solid #333; }
+
+.admin-reason-line { color: #ddd; font-size: 0.85rem; margin-bottom: 0.4rem; }
+
+.admin-reason-empty { color: #777; font-size: 0.8rem; font-size: italic; }
+
+.btn-admin-retain {
+    margin-top: 0.8rem;
+    margin-left: 0.6rem;
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: Georgia, serif;
+    font-size: 0.85rem;
+}
+
+.btn-admin-retain:hover { background: var(--gold); color: var(--black); }
+
+.retained-tag { color: var(--gold); font-size: 0.75rem; font-size: italic; margin-left: 0.5rem;}
+
+.court-settings-panel { background: var(--gray); border: 1px solid #333; border-radius: 8px; padding: 1.2rem 1.5rem; margin: 1rem 3rem; }
+
+.court-settings-panel h3 { color: var(--gold); margin-bottom: 0.8rem; }
+
+.setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; gap: 1rem; }
+
+.setting-row label { color: var(--white); font-size: 0.9rem; }
+
+.setting-row input { width: 80px; background: #0d0d0d; border: 1px solid #444; color: var(--white); padding: 0.3rem 0.5rem; border-radius: 4px; }
+
+.btn-settings-update { background: var(--accent); color: var(--white); border: none; padding: 0.5rem 1.2rem; border-radius: 4px; cursor: pointer; margin-top: 0.5rem; }
+
+.btn-keep-vote {
+    border: 1px solid #2ecc71;
+    color: #2ecc71;
+}
+
+.btn-keep-vote:hover { background: #2ecc71; color: #fff; }
+
+.btn-keep-vote:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-reason-upvote {
+    margin-top: 0.5rem;
+    background: transparent;
+    border: 1px solid #2ecc71;
+    color: #2ecc71;
+    padding: 0.3rem 0.8rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: Georgia, serif;
+    font-size: 0.85rem;
+}
+
+.btn-reason-upvote:hover { background: #2ecc71; color: #fff; } 
+
+.btn-reason-upvote:disabled { opacity: 0.5; cursor: not-allowed;}
+
+.btn-justification-toggle {
+    margin-top: 0.5rem;
+    background: transparent;
+    border: 1px solid #444;
+    color: var(--white);
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: Georgia, serif;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.justification-section { display: none; margin-top: 0.8rem; border-top: 1px solid #333; padding-top: 0.8rem; }
+
+.justification-section.open { display: block; }
+
+.justification-box-wrapper {
+    max-width: 420px;
+    margin: 0 auto;
+    box-sizing: border-box;
+    background: #151515;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 0.6rem;
+}
+
+.justification-box-wrapper textarea {
+    width: 100%;
+    min-height: 50px;
+    max-height: 90px;
+    background: #0d0d0d;
+    border: 1px solid #444;
+    color: var(--white);
+    border-radius: 4px;
+    padding: 0.4rem;
+    font-family: Georgia, serif;
+    font-size: 0.85rem;
+    resize: vertical;
+}
+
+.justification-box-wrapper small {
+    color: #888;
+    font-size: 0.7rem;
+}
+
+.justification-box-wrapper .btn-reason-submit {
+    padding: 0.3rem 0.9rem;
+    font-size: 0.8rem;
+    margin-top: 0.3rem;
+}
+
+.justification-box-wrapper,
+.justification-box-wrapper textarea,
+.justification-box-wrapper .btn-reason-submit {
+    outline: none;
+}
+
+.justification-box-wrapper textarea:focus,
+.justification-box-wrapper .btn-reason-submit:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+

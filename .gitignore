@@ -1,0 +1,5 @@
+.env
+venv/
+opinion.db
+__pycache__/
+*.pyc

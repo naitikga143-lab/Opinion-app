@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="csrf-token" content="{{ csrf_token() }}"/>
+    <title>Court</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='court.css') }}"/>
+</head>
+<body>
+    <nav>
+        <a href="/" class="logo">
+            <span class="home-icon">🏠</span>
+        </a>
+        <div class="nav-links">
+            <span style="color:#d4a843;">Admin Panel</span>
+            <a href="/admin/users" class="btn-join">Users</a>
+            <a href="/admin/logout" class="btn-join">Logout</a>
+        </div>
+    </nav>
+
+    <div class="court-setting-panel">
+        <h3>Threshold Settings</h3>
+        <div class="setting-row">
+            <label>Vote threshold (with min reasons):</label>
+            <input type="number" id="voteThresholdInput" min="1"/>
+        </div>
+        <div class="setting-row">
+            <label>Min reasons required (with votes):</label>
+            <input type="number" id="reasonWithVoteInput" min="0"/>
+        </div>
+        <div class="setting-row">
+            <label>Reasons-only threshold (no votes needed):</label>
+            <input type="number" id="reasonOnlyInput" min="1"/>
+        </div>
+        <button type="button" class="btn-settings-update" onclick="updateSettings()">Update Settings</button>
+        <p id="settingsStatus"></p>
+    </div>
+
+    <div class="court-tags">
+        <button type="button" class="court-tag active" onclick="filterCourt(this, 'abuse')">Abuse</button>
+        <button type="button" class="court-tag" onclick="filterCourt(this, 'personal_attacks')">Personal Attack</button>
+        <button type="button" class="court-tag" onclick="filterCourt(this, 'engagement_bait')">Engagement Bait</button>
+        <button type="button" class="court-tag" onclick="filterCourt(this, 'useless_talk')">Useless Talk</button>
+        <button type="button" class="court-tag" onclick="filterCourt(this, 'others')">Others</button>
+    </div>
+
+    <section>
+        <div id="courtEntries" class="court-entries">
+            <p>Loading...</p>
+        </div>
+    </section>
+
+    <script>
+        let currentCategory = 'abuse';
+        function filterCourt(btnEl, tag) {
+            document.querySelectorAll('.court-tag').forEach(btn => btn.classList.remove('active'));
+            btnEl.classList.add('active');
+            currentCategory = tag;
+            loadCourtEntries(tag);
+        }
+
+        function loadCourtEntries(category) {
+            const container = document.getElementById('courtEntries');
+            container.innerHTML = '<p>Loading...</p>';
+
+            fetch(`/admin/court/data/${category}`)
+                .then(res => res.json())
+                .then(entries => {
+                    if (!entries.length) {
+                        container.innerHTML = '<p class="court-empty">Iss category mein koi comment report nahi hui hai</p>'
+                        return;
+                    }
+
+                    container.innerHTML = entries.map(e => `
+                        <div class="court-card" id="card-${e.id}">
+                            <div class="court-card-header">
+                                <span class="court-posted-by">Posted by: @${e.posted_by || 'unknown'}</span>
+                                <a href="/court/goto/${e.item_type}/${e.item_id}" class="court-go-link">↗ Original</a>
+                                <span class="court-reported-by">Reported by: @${e.reported_by || 'anonymous'}</span>
+                            </div>
+                            <p class="court-content">${e.content}</p>
+                            <div class="court-card-footer">
+                                <span class="court-type">${e.item_type}</span>
+                                <span class="court-vote-count">🚩${e.delete_votes || 0} votes</span>
+                                <button type="button" class="btn-admin-delete" onclick="confirmDelete(${e.id}, '${e.item_type}', ${e.item_id})">Delete this statement</button>
+                                <button type="button" class="btn-admin-retain" onclick="confirmRetain(${e.id}, '${e.item_type}', ${e.item_id})">Retain</button>
+                            </div>
+                            <div class="admin-reasons" id="reasons-${e.id}"></div>
+                        </div>
+                    `).join('');
+
+                    entries.forEach(e => loadReasonsForAdmin(e.id));
+                })
+                .catch(err => {
+                    console.error('Court entries load failed:', err);
+                    container.innerHTML = '<p class="court-empty">Entries load nahi ho paaye. Console check karo.</p>';
+                });
+        }
+
+        function loadReasonsForAdmin(entryId) {
+            fetch(`/court/reasons/${entryId}`)
+                .then(res => res.json())
+                .then(data => {
+                    const container = document.getElementById(`reasons-${entryId}`);
+                    let html = '';
+
+                    for (let n = 1; n <= 3; n++) {
+                        const text = data[`reason${n}`];
+                        const by = data[`reason${n}_by`];
+                        if (text) {
+                            html += `<p class="admin-reason-line"><strong>@${by}:</strong> ${text}</p>`;
+                        }
+                    }
+
+                    container.innerHTML = html ||'<p class="admin-reason-empty">Koi reason submit nahi hua abhi tak</p>';
+                })
+                .catch(err => {
+                    console.error('Reasons load failed for entry', entryId, err);
+                });
+        }
+
+        function confirmDelete(entryId, itemType, itemId) {
+            if (!confirm('Kya aap sach mein ye statement delete karna chahte hain ? Ye action wapas nahi ho sakta hai.')) {
+                return;
+            }
+
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            if (!csrfMeta) {
+                alert('CSRF token nahi mila. Page reoad karo.');
+                return;
+            }
+
+            fetch(`/admin/court/delete/${entryId}/${itemType}/${itemId}`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrfMeta.content }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const card = document.getElementById(`card-${entryId}`);
+                    if (card) card.remove();
+                } else {
+                    alert('Delete nahi ho paya');
+                }
+            })
+            .catch(err => {
+                console.error('Delete failed:', err);
+                alert('Delete nahi ho paya');
+            });
+        }
+
+        function confirmRetain(entryId, itemType, itemId) {
+            if (!confirm('Ye statement retain karna hai ismein koi galti nahi dikhai deti')) {
+                return;
+            }
+
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            if (!csrfMeta) {
+                alert('CSRF token nahi milla. Page reload karo.');
+                return;
+            }
+
+            fetch(`/admin/court/retain/${entryId}/${itemType}/${itemId}`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrfMeta.content }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const card = document.getElementById(`card-${entryId}`);
+                    if (card) card.remove();
+                } else {
+                    alert('Retain nahi ho paya');
+                }
+            })
+            .catch(err => {
+                console.error('Retain failed:', err);
+                alert('Retain nahi ho paya');
+            });
+        }
+
+        function loadSettings() {
+            fetch('/admin/court/settings')
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('voteThresholdInput').value = data.vote_threshold;
+                    document.getElementById('reasonWithVoteInput').value = data.reason_with_vote_threshold;
+                    document.getElementById('reasonOnlyInput').value = data.reason_only_threshold;
+                })
+                .catch(err => console.error('Settings load failed:', err));
+            }
+        function updateSettings() {
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            if (!csrfMeta) {
+                alert('CSRF token nahi mila. Page reload karo.');
+                return;
+            }
+            const payload = {
+                vote_threshold: document.getElementById('voteThresholdInput').value,
+                reason_with_vote_threshold: document.getElementById('reasonWithVoteInput').value,
+                reason_only_threshold: document.getElementById('reasonOnlyInput').value
+            };
+
+            fetch('/admin/court/settings/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfMeta.content
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                const status = document.getElementById('settingsStatus');
+                if (data.success) {
+                    status.innerText = 'Settings update ho gaye';
+                    status.style.color = 'lightgreen';
+                } else {
+                    status.innerText = data.message;
+                    status.style.color = 'red';
+                }
+            })
+            .catch(err => {
+                console.error('Settings update failed:', err);
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+            loadCourtEntries(currentCategory);
+        }); 
+
+    </script>
+</body>
+</html>

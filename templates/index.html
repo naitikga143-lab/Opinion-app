@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Opinion - The Debate for Truth</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
+</head>
+
+{% if show_toast %}
+<div id="toast" style="position: fixed;bottom: 2rem;left: 50%;transform: translateX(-50%);background: #1a1a1a;border: 1px solid #e83a2f;color: #f5f0e8;padding: 1rem 2rem;border-radius: 4px;z-index: 999;font-family: Georgia,serif;">
+  discussion mein participate karne ke liye login karein! 🔒
+</div>
+<script>
+  setTimeout(() => { window.location.href = '/auth'; }, 2000);
+</script>
+{% endif %}
+
+<body>
+  <nav>
+    <div class="logo">
+        <h1>Opinion</h1>
+        <small>the debate for truth</small>
+    </div>
+    <div class="nav-links">
+      <a href="/explore">Explore</a>
+      <a href="/trending">Trending</a>
+      <a href="/users">Our Users</a>
+      <a href="/court">Court</a>
+      {% if session.nickname %}
+      <a href="/messages" class="bell-icon">
+          🔔
+          {% if unread_count and unread_count > 0 %}
+              <span class="notif-badge">{{ unread_count if unread_count <= 9 else '9+' }}</span>
+          {% endif %}
+      </a>
+      <a href="{{ url_for('profile.profile', nickname=session.nickname) }}" class="user-hello">Hey, {{ session.nickname }}!</a>
+      <a href="/logout" class="btn-join">Logout</a>
+      {% else %}
+      <a href="/auth" class="btn-join">Join Now</a>
+      {% endif %}
+    </div>
+  </nav>
+
+  <section class="hero">
+    <p class="tag">India's Debate Platform</p>
+    <h1>Every Voice. Every Truth. <br><span>One Platform.</span></h1>
+    <p class="desc">Raise topics. Share opinions. Debate with the real people.</p>
+    <div class="btns">
+      <a href="/discuss" class="btn-primary">Start Discussion</a>
+      <a href="/explore" class="btn-secondary">Explore Topics</a>
+    </div>
+  </section>
+
+</body>
+</html>

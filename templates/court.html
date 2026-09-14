@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale1.0"/>
+    <meta name="csrf-token" content="{{ csrf_token() }}"/>
+    <title>Court</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='court.css') }}"/>
+</head>
+
+<script>
+    let currentCategory = 'abuse';
+
+    function filterCourt(btnEl, tag) {
+        document.querySelectorAll('.court-tag').forEach(btn => btn.classList.remove('active'));
+        btnEl.classList.add('active');
+        currentCategory = tag;
+        loadCourtEntries(tag);
+    }
+
+    function loadCourtEntries(category) {
+        const container = document.getElementById('courtEntries');
+        container.innerHTML = '<p>Loading...</p>';
+
+        return fetch(`/court/data/${category}`)
+            .then(res => res.json())
+            .then(entries => {
+                if (!entries.length) {
+                    container.innerHTML = '<p class="court-empty">Is category mein abhi koi nahi hai</p>';
+                    return;
+                }
+
+                container.innerHTML = entries.map(e => `
+                    <div class="court-card" id="entry-${e.id}">
+                        <div class="court-card-header">
+                            <span class="court-posted-by">Posted by: @${e.posted_by || 'unknown'}</span>
+                            <a href="/court/goto/${e.item_type}/${e.item_id}" class="court-go-link">↗ Original</a>
+                        </div>
+                        <p class="court-content">${e.content}</p>
+
+                        <button type="button" class="btn-justification-toggle" onclick="toggleJustificationBox(${e.id}, this)">Justification ya proof dein 🔻</button>
+                        <div class="justification-section" id="justificationSection-${e.id}"></div>
+
+                        <div class="court-court-card-footer">
+                            <span class="court-type">${e.item_type}</span>
+                            <div class="court-vote-buttons">
+                                <button type="button" class="btn-delete-vote" ${e.has_voted ? 'disabled' : ''} onclick="voteDelete(${e.id}, this)"> ${e.has_voted ? 'Voted' : 'Ye statement delete hona chahiye'}</button>
+                                <button type="button" class="btn-keep-vote" ${e.has_voted ? 'disabled' : ''} onclick="voteKeep(${e.id}, this)">${e.has_voted ? 'Voted' : 'Ye statement nahi delete hona chahiye'}</button> 
+                            </div>
+                            <button type="button" class="btn-reason-toggle" onclick="toggleReasonBox(${e.id}, this)">Koi valid reason dein 🔻</button>
+                        </div>
+                        <div class="reason-section" id="reasonSection-${e.id}"></div>
+                    </div>
+                `).join('');
+            })  
+            .catch(err => {
+                console.error('Court entries load failed:', err);
+                container.innerHTML = '<p clasds="court-empty">Entries load nahi ho paaye. Console check karo.</p>';
+            });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const params = new URLSearchParams(window.location.search);
+        const urlCategory = params.get('category');
+
+        if (urlCategory) {
+            currentCategory = urlCategory;
+            document.querySelectorAll('.court-tag').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('onclick').includes(`'${urlCategory}'`)) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        loadCourtEntries(currentCategory).then(() => {
+            if (window.location.hash) {
+                const el = document.querySelector(window.location.hash);
+                if (el) el.scrollIntoView({ block: 'start' });
+            }
+        });
+    });
+
+    function voteDelete(entryId, btnEl) {
+        const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        if (!csrfMeta) {
+            alert('CSRF token nahi milla. Page reload karo.');
+            return;
+        }
+
+        fetch(`/court/vote/${entryId}`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfMeta.content }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                btnEl.disabled = true;
+                btnEl.innerText = 'Voted';
+
+                const keepBtn = document.querySelector(`#entry-${entryId} .btn-keep-vote`);
+                if (keepBtn) {
+                    keepBtn.disabled = true;
+                    keepBtn.innerText = 'Voted';
+                }
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(err => {
+            console.error('Vote failed:', err);
+            alert('Vote submit nahi ho paya');
+        });
+    }
+
+    const WARNING_TEXT = "Please valid/sahi reason dein is card ka virodh karne ke liye, bina koi hate, misjudge aur personal attack kiye";
+
+    function toggleReasonBox(entryId, btnEl) {
+        const section = document.getElementById(`reasonSection-${entryId}`);
+        if (section.classList.contains('open')) {
+            section.classList.remove('open');
+            section.innerHTML = '';
+            btnEl.innerText = 'Give reason🔻';
+            return;
+        }   
+
+        section.classList.add('open');
+        btnEl.innerText = 'Give reason🔺';
+        loadReasonSection(entryId, section);
+    }
+
+    function  loadReasonSection(entryId, section) {
+        section.innerHTML = '<p>Loading...</p>';
+        fetch(`/court/reasons/${entryId}`)
+            .then(res => res.json())
+            .then(data => renderReasonSection(entryId, section, data))
+            .catch(err => {
+                console.error('Reasons load failed:', err);
+                section.innerHTML = '<p class="court-empty">Reasons load nahi ho paaye</p>';
+            });
+    }
+
+    function renderReasonSection(entryId, section, data) {
+        let html = '';
+
+        for (let n = 1; n <= 3; n++) {
+            const reasonText = data[`reason${n}`];
+            const reasonBy = data[`reason${n}_by`]; 
+            const upvotes = data[`reason${n}_upvotes`] || 0;
+            const hasUpvoted = data[`reason${n}_has_upvoted`];
+
+            if (reasonText) {
+                html += `
+                    <div class="reason-entry">
+                        <small>Submitted by: @${reasonBy}</small>
+                        <p class="reason-readonly">${reasonText}</p>
+                        <button type="button" class="btn-reason-upvote" ${hasUpvoted ? 'disabled' : ''} onclick="reasonUpvote(${entryId}, ${n}, this)">
+                            🖐 ${hasUpvoted ? 'Upvoted' : 'Upvote'} (${upvotes})
+                        </button>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="reason-box">
+                        <p class="reason-warning">${WARNING_TEXT}</p>
+                        <textarea id="reasonBox-${entryId}-${n}" oninput="checkWordLimit(${entryId}, ${n})" placeholder="Valid/sahi reasons dijiye in comments ko delete karane ke liye"></textarea>
+                        <small id="wordCount-${entryId}-${n}">0 / 75 words</small>
+                        <button type="button" class="btn-reason-submit" onclick="submitReason(${entryId}, ${n})">Submit</button>
+                    </div>
+                `;
+            }
+        }
+
+        section.innerHTML = html;
+    }
+
+    function checkWordLimit(entryId, n) {
+        const box = document.getElementById(`reasonBox-${entryId}-${n}`);
+        const counter = document.getElementById(`wordCount-${entryId}-${n}`);
+        let words = box.value.trim().split(/\s+/).filter(Boolean);
+
+        if (words.length > 75) {
+            words = words.slice(0, 75);
+            box.value = words.join(' ');
+        }
+
+        counter.innerText = `${words.length} / 75 words`;
+    }
+
+    function submitReason(entryId, slotNum) {
+        const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        if (!csrfMeta) {
+            alert('CSRF token nahi milla. Page reload karo.');
+            return;
+        }
+
+        const box = document.getElementById(`reasonBox-${entryId}-${slotNum}`);
+        const text = box.value.trim();
+
+        if (!text) {
+            alert('Reason khaai nahi chod sakte');
+            return;
+        }
+
+        fetch(`/court/reason/${entryId}/${slotNum}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfMeta.content
+            },
+            body: JSON.stringify({ text })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const section = document.getElementById(`reasonSection-${entryId}`);
+                loadReasonSection(entryId, section);
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(err => {
+            console.error('Reason submit failed:', err);
+            alert('Reason submit nahi ho paya');
+        });
+    }
+
+    function voteKeep(entryId, btnEl) {
+        const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        if (!csrfMeta) {
+            alert('CSRF token nahi milla. Page reload karo.');
+            return;
+        }
+
+        fetch(`/court/keep/${entryId}`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfMeta.content }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                btnEl.disabled = true;
+                btnEl.innerText = 'Voted';
+
+                const deleteBtn = document.querySelector(`#entry-${entryId} .btn-delete-vote`)
+                if (deleteBtn) {
+                    deleteBtn.disabled = true;
+                    deleteBtn.innerText = 'Voted'
+                }
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(err => {
+            console.error('Keep vote failed:', err);
+            alert('Vote submit nahi ho paya');
+        });
+    }
+
+    function reasonUpvote(entryId, slotNum, btnEl) {
+        const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        if (!csrfMeta) {
+            alert('CSRF token nahi milla. Page reload karo.');
+            return;
+        }
+
+        fetch(`/court/reason/upvote/${entryId}/${slotNum}`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfMeta.content }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const section = document.getElementById(`reasonSection-${entryId}`);
+                loadReasonSection(entryId, section)
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(err => {
+            console.error('Upvote failed:', err);
+            alert('Upvote submit nahi ho paya');
+        });
+    }
+
+    function toggleJustificationBox(entryId, btnEl) {
+        const section = document.getElementById(`justificationSection-${entryId}`);
+        if (section.classList.contains('open')) {
+            section.classList.remove('open');
+            section.innerHTML = '';
+            btnEl.innerText = 'Justification ya proof dein 🔻';
+            return;
+        }
+
+        section.classList.add('open');
+        btnEl.innerText = 'Justification ya proof dein 🔺';
+        loadJustificationSection(entryId, section);
+    }
+
+    function loadJustificationSection(entryId, section) {
+        section.innerHTML = '<p>Loading...</p>';
+        fetch(`/court/justification/${entryId}`)
+            .then(res => res.json())
+            .then(data => renderJustificationSection(entryId, section, data))
+            .catch(err => {
+                console.error('Justification load failed:', err);
+                section.innerHTML = '<p class="court-empty">Justification load nahi ho paae</p>';
+            });
+    }
+
+    function renderJustificationSection(entryId, section, data) {
+        if (data.justification) {
+            section.innerHTML = `
+                <div class="justification-box-wrapper">
+                    <p class="reason-readonly">${data.justification}</p>
+                </div>
+            `;
+            return;
+        }
+
+        if (data.is_owner) {
+            section.innerHTML = `
+                <div class="justification-box-wrapper">
+                    <textarea id="justificationBox-${entryId}" oninput="checkJustificationWordLimit(${entryId})" placeholder="Apna justification dijiye (max 200 words)"></textarea>
+                    <small id="justificationWordCount-${entryId}">0 / 200 words</small>
+                    <button type="button" class="btn-reason-submit" onclick="submitJustification(${entryId})">Submit</button>
+                </div>
+            `;
+        } else {
+            section.innerHTML = '<p class="court-empty">Owner ne abhi tak justification nahi diya hai</p>';
+        }
+    }
+
+    function checkJustificationWordLimit(entryId) {
+        const box = document.getElementById(`justificationBox-${entryId}`);
+        const counter = document.getElementById(`justificationWordCount-${entryId}`);
+        let words = box.value.trim().split(/\s+/).filter(Boolean);
+
+        if (words.length > 200) {
+            words = words.slice(0, 200);
+            box.value = words.join(' ');
+        }
+
+        counter.innerText = `${words.length} / 200 words`;
+    }
+
+    function submitJustification(entryId) {
+        const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        if (!csrfMeta) {
+            alert('CSRF token nahi milla. Page reload karo.');
+            return;
+        }
+
+        const box = document.getElementById(`justificationBox-${entryId}`);
+        const text = box.value.trim();
+
+        if (!text) {
+            alert('justification khaali nahi ho sakta');
+            return;
+        }
+
+        fetch(`/court/justification/${entryId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfMeta.content
+            },
+            body: JSON.stringify({ text })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const section = document.getElementById(`justificationSection-${entryId}`);
+                loadJustificationSection(entryId, section)
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(err => {
+            console.error('Justification submit failed:', err);
+            alert('Justification submit nahi ho paya');
+        });
+    }
+
+</script>
+
+<body>
+    <nav>
+        <a href="/" class="logo">
+            <span class="home-icon">🏠</span>
+        </a>
+        <div class="nav-links">
+            <a href="/explore">Explore</a>
+            <a href="/trending">Trending</a>
+            <a href="/users">Our Users</a>
+            <a href="/court">Court</a>
+            {% if session.nickname %}
+            <a href="/messages" class="bell-icon">
+                🔔
+                {% if unread_count and unread_count > 0 %}
+                    <span class="notif-badge">{{ unread_count if unread_count <= 9 else '9+' }}</span>
+                {% endif %}
+            </a>
+                <a href="{{ url_for('profile.profile', nickname=session.nickname) }}" class="user-hello">Hey, {{ session.nickname }}!</a>
+                <a href="/logout" class="btn-join">Logout</a>
+            {% else %}
+                <a href="/auth" class="btn-join">Join Now</a>
+                {% endif %}
+        </div>
+    </nav>
+
+    <div class="court-tags">
+        <button type="button" class="court-tag active" onclick="filterCourt(this, 'abuse')">Abuse</button>
+        <button type="button" class="court-tag" onclick="filterCourt(this, 'personal_attack')">Personal Attack</button>
+        <button type="button" class="court-tag" onclick="filterCourt(this, 'engagement_bait')">Engagement Bait</button>
+        <button type="button" class="court-tag" onclick="filterCourt(this, 'useless_talk')">Useless Talk</button>
+        <button type="button" class="court-tag" onclick="filterCourt(this, 'others')">Others</button>
+    </div>
+
+    <section>
+        <div id="courtEntries" class="court-entries">
+            <p>Loading...</p>
+        </div>
+    </section>
+</body>
+</html>

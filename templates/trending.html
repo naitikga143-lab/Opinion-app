@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trendng - Opinion</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='trending.css') }}">
+</head>
+<body>
+    <nav>
+        <a href="/" class="logo">
+            <span class="home-icon">🏠</span>
+        </a>
+        <div class="nav-links">
+            <a href="/explore">Explore</a>
+            <a href="/trending" class="active">Trending</a>
+            <a href="/users">Our Users</a>
+            <a href="/court">Court</a>
+            {% if session.nickname %}
+                <a href="/messages" class="bell-icon">
+                    🔔
+                    {% if unread_count and unread_count > 0 %}
+                        <span class="notif-badge">{{ unread_count if unread_count <= 9 else '9+' }}</span>
+                    {% endif %}
+                </a>
+                <a href="{{ url_for('profile.profile', nickname=session.nickname) }}" class="user-hello">Hey, {{ session.nickname }}!</a>
+                <a href="/logout" class="btn-join">Logout</a>
+            {% else %}
+                <a href="/auth" class="btn-join">Join Now</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <section class="trending-hero">
+        <p class="tag">What people are talking about</p>
+        <h1>Trending Topics</h1>
+    </section>
+
+    <div class="filter-bar">
+        <a href="/trending?period=day&tab={{ active_tab }}" class="filter-btn {{ 'active' if period == 'day' else '' }}">Last 24 Hours</a>
+        <a href="/trending?period=month&tab={{ active_tab }}" class="filter-btn {{ 'active' if period == 'month' else '' }}">This Month</a>
+        <a href="/trending?period=year&tab={{ active_tab }}" class="filter-btn {{ 'active' if period == 'year' else '' }}">This Year</a>
+        <a href="/trending?period=all&tab={{ active_tab }}" class="filter-btn {{ 'active' if period == 'all' else '' }}">All Time</a>
+    </div>
+
+    <section class="trending-body">
+        <div class="tab-switch">
+            <button class="tab-btn {{ 'active' if active_tab == 'heated' else '' }}" data-tab="heated">Most Heated</button>
+            <button class="tab-btn {{ 'active' if active_tab == 'clicked' else '' }}" data-tab="clicked">Most Clicked</button>
+        </div>
+
+        <div class="tab-panel {{ 'active' if active_tab == 'heated' else '' }}" id="heated">
+            {% if heated_topics|length == 0 %}
+                <p class="empty-state">Koi topic heated nahi hai.</p>
+            {% else %}
+                {% for topic in heated_topics %}
+                <a href="/discuss#topic-{{ topic.id }}" class="topic-card">
+                    <div class="topic-main">
+                        <h3>{{ topic.title }}</h3>
+                        <p class="topic-desc">{{ topic.description }}</p>
+                        <p class="topic-meta">by {{ topic.nickname }} &middot; {{ topic.created_at }}</p>
+                    </div>
+                    <div class="topic-stat heat-stat">
+                        <span class="stat-number">{{ topic.heat_count }}</span>
+                        <span class="stat-label">heats</span>
+                    </div>
+                </a>
+                {% endfor %}
+            {% endif %}
+        </div> 
+
+        <div class="tab-panel {{ 'active' if active_tab == 'clicked' else '' }}" id="clicked">
+            {% if clicked_topics|length == 0 %}
+                <p class="empty-state">Abhi Koi topic click track nahi hua.</p>
+            {% else %}
+                {% for topic in clicked_topics %}
+                <a href="/discuss#topic-{{ topic.id }}" class="topic-card">
+                    <div class="topic-main">
+                        <h3>{{ topic.title }}</h3>
+                        <p class="topic-desc">{{ topic.description }}</p>
+                        <p class="topic-meta">by {{ topic.nickname }} &middot; {{ topic.created_at }}</p>
+                    </div>
+                    <div class="topic-stat click-stat">
+                        <span class="stat-number">{{ topic.click_count }}</span>
+                        <span class="stat-label">Views</span>
+                    </div>
+                </a>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </section>
+
+    <script>
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const tabPanels = document.querySelectorAll('.tab-panel');
+        const filterLinks = document.querySelectorAll('.filter-btn');
+
+        function setFilterLinksTab(tab) {
+            filterLinks.forEach(link => {
+                const url = new URL(link.href, window.location.origin);
+                url.searchParams.set('tab', tab);
+                link.href = url.toString();
+            });
+        }
+
+        tabButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                tabButtons.forEach(b => b.classList.remove('active'));
+                tabPanels.forEach(p => p.classList.remove('active'));
+
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.tab).classList.add('active');
+
+                setFilterLinksTab(btn.dataset.tab);
+            });
+        });
+    </script>
+</body>
+</html>

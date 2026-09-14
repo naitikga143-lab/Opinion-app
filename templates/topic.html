@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="csrf-token" content="{{ csrf_token() }}"/>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>{{ topic[2] }} - Opinion</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='topic.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='report.css') }}"/>
+    <script src="{{ url_for('static', filename='report.js') }}"></script>
+</head>
+<body>
+    <nav>
+        <a href="/" class="logo">
+            <span class="home-icon">🏠</span>
+        </a>
+        <div class="nav-links">
+            <a href="/explore">Explore</a>
+            <a href="/trending">Trending</a>
+            <a href="/users">Our Users</a>
+            <a href="/court">Court</a>
+            {% if session.nickname %}
+                <a href="/messages" class="bell-icon">
+                    🔔
+                    {% if unread_count and unread_count > 0 %}
+                        <span class="notif-badge">{{ unread_count if unread_count <= 9 else '9+' }}</span>
+                    {% endif %}
+                </a>
+                <a href="{{ url_for('profile.profile', nickname=session.nickname) }}" class="user-hello">Hey, {{ session.nickname }}!</a>
+                <a href="/logout" class="btn-join">Logout</a>
+            {% else %}
+                <a href="/auth" class="btn-join">Join Now</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <section class="topic-detail">
+        <a href="/discuss" class="btn-back">
+            🔙 Back to Topic
+        </a>
+        <h1>{{ topic[2] }}</h1>
+        <p class="topic-full-desc">{{ topic[3] }}</p>
+        <small>Posted by: <a href="/profile/{{ topic[1] }}" class="comment-user">@{{ topic[1] }}</a></small>
+
+        {% set rc = get_topic_retain_count(topic[0]) %}
+        {% if rc > 0 %}
+            <small class="retained-tag">Retained {{ rc }} time{{ 's' if rc > 1 else '' }}</small>
+        {% endif %}
+
+        <h2 class="issues-title">Issues</h2>
+
+        {% if issues %}
+            <div class="issues-list">
+                {% for issue in issues %}
+                <div class="issue-card" id="issue-{{ issue[0] }}">
+                    <span class="issue-number">{{ loop.index }}.</span>
+                    <div class="issue-content">
+                        <p>{{ issue[3] }}</p>
+                        <small><a href="/profile/{{ issue[2] }}" class="comment-user">@{{ issue[2] }}</a> . {{ time_ago_issues(issue[4]) }}</small>
+                        {% if issue[6] %}<span class="edited-tag">(edited)</span>{% endif %}
+
+                        {% set rc = get_issue_retain_count(issue[0]) %}
+                        {% if rc > 0 %}
+                            <small class="retained-tag">Retained {{ rc }} time{{ 's' if rc > 1 else '' }}</small>
+                        {% endif %}
+
+                        <button type="button" class="btn-conclusion-toggle" onclick="toggleConclusionPanel('{{ issue[0] }}', this)">
+                            📜 Conclusion Panel 🔻
+                        </button>
+                        <div class="conclusion-panel" id="conclusionPanel-{{ issue[0] }}"></div>
+
+                        {% if session.nickname == issue[2] %}
+                        <button class="btn-edit" onclick="toggleEditIssue('{{ issue[0] }}')">Edit</button>
+                        <form method="POST" action="/discuss/topic/{{ topic[0] }}/issue/{{ issue[0] }}/delete" style="display: inline;" onsubmit="return confirm('aap sure hain ? ye issue aur uske andar ke saare discussions delete ho jaenge');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <button type="submit" class="btn-delete">Delete</button>
+                        </form>
+                        <div class="edit-form" id="editIssueForm-{{ issue[0] }}" style="display: none;">
+                            <form method="POST" action="/discuss/topic/{{ topic[0] }}/issue/{{  issue[0] }}/edit">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <textarea name="description">{{ issue[3] }}</textarea>
+                                <button type="submit">Save</button>
+                            </form>
+                        </div>
+                        {% endif %}
+
+                    {% set v = votes_data[issue[0]] %}
+                    {% set uv = user_votes[issue[0]] %}
+
+                    <div class="upvote-container">
+                           <form method="POST" action="/discuss/topic/{{ topic[0] }}/issue/{{ issue[0] }}/vote" class="vote-form" data-issue-id="{{ issue[0] }}">
+                               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                               <button type="submit" name="vote" value="upvote" class="upvote-btn {{ 'voted' if uv else '' }}">🔺 {{ v.total }}</button>
+                           </form>
+                    </div>
+
+                        <a href="/discuss/topic/{{ topic[0] }}/issue/{{ issue[0] }}" class="btn-comment">Comment</a>
+                        <button type="button" class="btn-report"
+                            data-type="issue"
+                            data-id="{{ issue[0] }}"
+                            data-content="{{ issue[3] }}"
+                            data-postedby="{{ issue[2] }}"
+                            onclick="handleReportClick(this)">Report</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="issues-empty">
+                <p>Raise an issue</p>
+            </div>
+        {% endif %}
+    </section>
+
+    <button class="fab-btn fab-blue" onclick="openModal()">+</button>
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
+    {% include "report_modal.html" %}
+
+    <div class="modal" id="issueModal">
+        <button class="modal-close" onclick="closeModal()">X</button>
+        <h2>Raise an Issue</h2>
+        {% if request.args.get('error') == 'emoji' %}
+        <p class="error-msg">⚠ Sirf emoji post na karein!</p>
+        {% elif request.args.get('error') == 'abusive' %}
+        <p class="error-msg">⚠ galat shabdo ka istemaal na karein agar kisine aapse koi hatefull tareeke se baat ki ho to usse report karein</p>
+        {% endif %}
+        <form method="POST" action="/discuss/topic/{{ topic[0] }}/issue">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <textarea name="description" placeholder="koi ek point likho phir comment-section mein usse discuss karo(max 100 words)..." required oninput="wordCount(this)"></textarea>
+            <small id="wordMsg">0 / 100 words</small>
+            <button type="submit" class="btn-primary">Post Issue</button>
+        </form>
+    </div>
+
+    <script>
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
+        function openModal() {
+            document.getElementById('issueModal').classList.add('active');
+            document.getElementById('modalOverlay').classList.add('active');
+        }
+        function closeModal() {
+            document.getElementById('issueModal').classList.remove('active');
+            document.getElementById('modalOverlay').classList.remove('active');
+        }
+        function wordCount(el) {
+            const words = el.value.trim() === '' ? 0 : el.value.trim().split(/\s+/).length;
+            document.getElementById('wordMsg').textContent = words + ' / 100 words';
+            if (words > 100) {
+                el.value = el.value.trim().split(/\s+/).slice(0, 100).join(' ');
+            }
+        }
+        function toggleEditIssue(id) {
+            const form = document.getElementById('editIssueForm-' + id);
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        window.addEventListener('load', function(){
+            setTimeout(function() {
+                const savedScroll = sessionStorage.getItem('topicScrollPos');
+                if (savedScroll) {
+                    window.scrollTo(0, parseInt(savedScroll));
+                    sessionStorage.removeItem('topicScrollPos');
+                }
+            }, 50)
+        })
+
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function() {
+                sessionStorage.setItem('topicScrollPos', window.scrollY);
+            })
+        })
+
+        function toggleConclusionPanel(issueId, btnEl) {
+            const panel = document.getElementById('conclusionPanel-' + issueId);
+
+            if (panel.classList.contains('open')) {
+                panel.classList.remove('open');
+                panel.innerHTML = '';
+                btnEl.innerText = '📜 Conclusion Panel 🔻';
+                return; 
+            }
+
+            panel.classList.add('open');
+            panel.innerHTML = '<p>Loading...</p>';
+            btnEl.innerText = '📜 Conclusion Panel 🔺';
+
+            fetch(`/issue/conclusion/${issueId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.comments || !data.comments.length) {
+                        panel.innerHTML = '<p class="conclusion-empty">Jo comment conclusion/solution jaisi lage usse conclusion votes dekar conclusion panel mein shaamil karein</p>';
+                        return;
+                    }
+                    panel.innerHTML = data.comments.map((c, i) => `
+                        <div class="conclusion-item">
+                            <span class="conclusion-rank">#${i + 1}</span>
+                            <div class="conclusion-body">
+                                <small class="conclusion-user">@${c.nickname}</small>
+                                <p class="conclusion-text">${c.comment}</p>
+                                <span class="conclusion-votes">🖐 ${c.conclusion_count} support</span>
+                            </div>
+                        </div>
+                    `).join('');
+                })
+                .catch(err => {
+                    console.error('Conclusion panel load failed:', err);
+                    panel.innerHTML = '<p class="conclusion-empty">Load nahi ho paya. Console check karo.</p>'
+                });
+        }
+
+        document.querySelectorAll('.vote-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const issueId = this.dataset.issueId;
+                const btn = this.querySelector('.upvote-btn');
+
+                const formData = new FormData(this);
+                formData.set('vote', btn.value);
+
+                fetch(this.action, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    btn.innerHTML = '🔺' + data.total;
+                    btn.classList.toggle('voted', data.voted);
+                    reorderIssues(data.order);
+                })
+                .catch(err => console.error('Vote failed:', err));
+            });
+        });
+
+        function reorderIssues(order) {
+            const list = document.querySelector('.issues-list');
+            const cards = {};
+            list.querySelectorAll('.issue-card').forEach(card => {
+                cards[card.id] = card;
+            });
+
+            const firstRects = {};
+            Object.keys(cards).forEach(id => {
+                firstRects[id] = cards[id].getBoundingClientRect();
+            });
+
+            order.forEach(id => {
+                const card = cards['issue-' + id];
+                if (card) list.appendChild(card);
+            });
+
+            list.querySelectorAll('.issue-card').forEach((card, index) => {
+                const numberSpan = card.querySelector('.issue-number');
+                if (numberSpan) numberSpan.textContent = (index + 1) + '.';
+            })
+
+            Object.keys(cards).forEach(id => {
+                const card = cards[id];
+                const first = firstRects[id];
+                const last = card.getBoundingClientRect();
+                const deltaY = first.top - last.top;
+
+                if (deltaY !== 0) {
+                    card.style.transform = `translateY(${deltaY}px)`;
+                    card.style.transform = 'transform 0s'
+                    requestAnimationFrame(() => {
+                        card.style.transform = '';
+                        card.style.transition = 'transform 400ms ease';
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html>

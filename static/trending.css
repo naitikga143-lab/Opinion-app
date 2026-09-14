@@ -1,0 +1,91 @@
+.trending-hero { text-align: center; padding: 60px 24px 30px; }
+
+.trending-hero .tag { color: #e2703a; font-size: 13px; letter-spacing: 1px; margin-bottom: 8px; }
+
+.trending-hero h1 { font-family: Georgia, 'Times New Roman', Times, serif; font-size: 42px; color: #f3ead9; margin: 0; }
+
+.filter-bar { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding: 0 24px 34px; }
+
+.filter-btn {
+    color: #9a95a8;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 18px;
+    border: 1px solid #2a2a3c;
+    border-radius: 20px;
+    transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.filter-btn:hover { color: #f3ead9; border-color: #f0b429; }
+
+.filter-btn.active { color: #14141f; background: #f0b429; border-color: #f0b429; }
+
+.trending-body { max-width: 760px; margin: 0 auto; padding: 0 24px 80px; }
+
+.tab-switch { display: flex; gap: 8px; background: #1c1c2b; border-radius: 10px; padding: 6px; margin-bottom: 28px; }
+
+.tab-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #9a95a8;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 12px 0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.tab-btn.active { background: #f0b429; color: #14141f; }
+
+.tab-panel { display: none; flex-direction: column; gap: 14px; }
+
+.tab-panel.active { display: flex; }
+
+.topic-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    background: #1c1c2b;
+    border: 1px solid #2a2a3c;
+    border-radius: 12px;
+    padding: 20px;
+    text-decoration: none;
+    transition: border-color 0.2s ease;
+}
+
+.topic-card:hover { border-color: #f0b429; }
+
+.topic-main h3 {
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    color: #f3ead9; 
+    font-size: 19px;
+    margin: 0 0 6px;
+}
+
+.topic-desc { color: #b8b3c4; font-size: 14px; margin: 0 0 8px; line-height: 1.5; }
+
+.topic-meta { color: #6f6a80; font-size: 12px; margin: 0; }
+
+.topic-stat { text-align: center; min-width: 64px; flex-shrink: 0; }
+
+.stat-number { display: block; font-size: 22px; font-weight: 700; }
+
+.heat-stat .stat-number { color: #e2703a; }
+
+.click-stat .stat-number { color: #f0b429; }
+
+.stat-label { display: block; font-size: 11px; color: #6f6a80; text-transform: lowercase; }
+
+.empty-state { color: #6f6a80; text-align: center; padding: 40px 0; }
+
+@media (max-width: 600px) {
+    .trending-hero h1 { font-size: 30px; }
+
+    .topic-card { flex-direction: column; align-items: flex-start; }
+
+    .topic-stat { align-self: flex-end; }
+}

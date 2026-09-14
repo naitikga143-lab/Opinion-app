@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
+    <link rel="stylesheet" href="{{  url_for('static', filename='reply.css') }}"/>
+</head>
+<body>
+    {% macro render_reply(r) %}
+            <div class="reply-card" id="reply-{{ r.id }}" data-score="{{ r.likes - r.dislikes }}">
+                <div class="reply-meta">
+                    <a href="/profile/{{ r.nickname }}" class="comment-user">{{ r.nickname }}</a> &nbsp;.&nbsp; {{ time_ago_replies(r.created_at) }}
+                </div>
+
+                {% set words = r.reply_text.split() %}
+                {% if words|length > 25 %}
+                    <div class="reply-text reply-short" id="short-{{ r.id }}">
+                        {{ words[:25]|join(' ') }}...
+                    </div>
+                    <div class="reply-text reply-full" id="full-{{ r.id }}">
+                        {{ r.reply_text }}
+                    </div>
+                    <button class="toggle-reply-btn"
+                            onclick="toggleReply('{{ r.id }}', this)"
+                            data-open="false">
+                        🔻 aage padhein
+                    </button>
+                {% else %}
+                    <div class="reply-text">{{ r.reply_text }}</div>
+                {% endif %}
+
+                <div class="vote-row" id="votes-{{ r.id }}">
+                    <button type="button" class="btn-like {{ 'active' if r.user_vote == 'like' else '' }}" onclick="voteReply('{{ r.id}}', 'like')">
+                        👍 <span class="like-count">{{ r.likes }}</span>
+                    </button>
+                    <button type="button" class="btn-dislike {{ 'active' if r.user_vote == 'dislike' else '' }}" onclick="voteReply('{{ r.id}}', 'dislike')">
+                        👎 <span class="dislike-count">{{ r.dislikes }}</span>
+                    </button>
+                    </div>
+
+                {% if r.edited %}<span class="edited-tag">(edited)</span>{% endif %}
+
+                {% if session.nickname == r.nickname %}
+                <button class="btn-edit" onclick="toggleEditReply('{{ r.id }}')">Edit</button>
+                <div class="edit-form" id="editReplyForm-{{ r.id }}" style="display: none;">
+                    <form method="POST" action="/reply/{{ r.comment_id }}/edit/{{ r.id }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <textarea name="reply_text">{{ r.reply_text }}</textarea>
+                        <button type="submit">Save</button>
+                    </form>
+                </div>
+                {% endif %}
+
+                {% if session.nickname == r.nickname %}
+                <form method="POST" action="/reply/{{ r.comment_id }}/delete/{{ r.id }}" class="delete-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button type="submit" class="btn-delete-reply" onclick="return confirm('Reply delete ho jaega... app confirm hain ?')">
+                        Delete
+                    </button>
+                </form>
+                {% endif %}
+
+                <button class="btn-reply-chain"
+                        onclick="toggleReplyForm('{{ r.id }}')">
+                    Reply
+                </button>
+
+                <div class="chain-form" id="chain-form-{{ r.id }}" style="display: none;">
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <input type="hidden" name="parent_reply_id" value="{{ r.id }}"/>
+                        <textarea name="reply_text"
+                                  placeholder="Reply likho..."
+                                  required></textarea>
+                        <button type="submit">SEND ▶</button>
+                    </form>
+                </div>
+
+                {% if r.children %}
+                <div class="chain-toggle-wrap">
+                    <button class="chain-toggle-btn"
+                            onclick="toggleChain('{{ r.id }}', this)"
+                            data-open="false">
+                        🔻 {{ r.children|length }} aage ka reply dekhein
+                    </button>
+                    <div class="chain-list" id="chain-{{ r.id }}" style="display: none;">
+                        {% for child in r.children %}
+                            {{ render_reply(child) }}
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endmacro %}
+
+    <nav>
+        <a href="/" class="logo">
+            <span class="home-icon">🏠</span>
+        </a>
+        <div class="nav-links">
+            <a href="/explore">Explore</a>
+            <a href="/trending">Trending</a>
+            <a href="/users">Our Users</a>
+            <a href="/court">Court</a>
+            {% if session.nickname %}
+                <a href="/messages" class="bell-icon">
+                    🔔
+                    {% if unread_count and unread_count > 0 %}
+                        <span class="notif-badge">{{ unread_count if unread_count <= 9 else '9+' }}</span>
+                    {% endif %}
+                </a>
+                <a href="{{ url_for('profile.profile', nickname=session.nickname) }}" class="user-hello">Hey, {{ session.nickname }}!</a>
+                <a href="/logout" class="btn-join">Logout</a>
+            {% else %}
+                <a href="/auth" class="btn-join">Join Now</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="reply-page">
+        <a href="/discuss/topic/{{ topic_id }}/issue/{{ issue_id }}" class="back-link">🔙 go back</a>
+        <h2 class="reply-heading">Reply Section</h2>
+        <div class="original-comment">
+            <div class="meta">
+                <a href="/profile/{{ comment[3] }}" class="comment-user"><strong>{{ comment[3] }}</strong></a> &nbsp;.&nbsp; {{ comment[5] if comment[5] else '' }}
+            </div>
+            <div class="text">{{ comment[4] }}</div>
+        </div>
+
+        {% if error =='emoji' %}
+        <p class="reply-error">
+            ⚠ sirf emoji nahi post kar sakte
+        </p>
+        {% elif error == 'abusive' %}
+        <p class="reply-error">
+            ⚠ Gaali ya hateful language mat use karo, agar koi tumse galat tareeke se baat karta hai to usse report karo
+        </p>
+        {% endif %}
+        <div class="reply-form">
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <textarea name="reply_text" placeholder="bina kisi gaali ya hateful bhaasa ke iss comment pe reply karein..." required></textarea>
+                <button type="submit">Reply bhejein ▶</button>
+            </form>
+        </div>
+
+        {% if top_level %}
+        <div class="replies-list">
+            {% for r in top_level %}
+                {{ render_reply(r) }}
+            {% endfor %}
+        </div>
+        {% else %}
+            <div class="no-replies">Aapki comment pe abhi koi reply nahi aaya hai</div>
+        {% endif %}
+
+    </div>
+
+            
+    <script>
+    
+    const CSRF_TOKEN = "{{ csrf_token() }}";
+
+    window.addEventListener('DOMContentLoaded', () => {
+        const saveId = sessionStorage.getItem('replyScrollId');
+        if (saveId) {
+            const el = document.getElementById(saveId);
+            if (el) {
+
+                let parent = el.parentElement;
+                while (parent) {
+                    if (parent.classList && parent.classList.contains('chain-list')) {
+                        parent.style.display = 'block';
+
+                        const chainId = parent.id.replace('chain-', '');
+                        const btn = document.querySelector(
+                            `.chain-toggle-btn[onclick*="toggleChain('${chainId}'"]`
+                        );
+                        if (btn) {
+                            btn.dataset.open = 'true';
+                            btn.textContent = '🔺 ' + btn.textContent.replace('🔺', '').replace('🔻', '').trim();
+                        }
+                    }
+                    parent = parent.parentElement;
+                }
+
+                el.scrollIntoView({ block: 'center' });
+            }
+            sessionStorage.removeItem('replyScrollId');
+        }
+    });
+
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', () => {
+            const card = form.closest('.reply-card');
+            if (card) {
+                sessionStorage.setItem('replyScrollId', card.id);
+            }
+        });
+    });
+
+    function voteReply(id, vote) {
+        fetch('/reply/' + id + '/vote', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'vote=' + vote +'&csrf_token=' + encodeURIComponent(CSRF_TOKEN)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error === 'login_required') {
+                window.location.href = '/auth';
+                return;
+            }
+            if (data.error) return;
+
+            const wrap = document.getElementById('votes-' + id);
+            wrap.querySelector('.like-count').textContent = data.likes;
+            wrap.querySelector('.dislike-count').textContent = data.dislikes;
+            wrap.querySelector('.btn-like').classList.toggle('active', data.user_vote === 'like');
+            wrap.querySelector('.btn-dislike').classList.toggle('active', data.user_vote === 'dislike');
+
+            const card = document.getElementById('reply-' + id);
+            if (card) {
+                card.dataset.score = data.likes - data.dislikes;
+                const parentContainer = card.parentElement;
+                if (parentContainer) resortSiblings(parentContainer);
+            }
+        });
+    }
+    function toggleReply(id, btn) {
+        const short = document.getElementById('short-' + id);
+        const full = document.getElementById('full-' + id);
+        const isOpen = btn.dataset.open === 'true';
+        if (isOpen) {
+            full.style.display = 'none';
+            short.style.display = 'block';
+            btn.textContent = '🔻 Aage padhein';
+            btn.dataset.open = 'false';
+        } else {
+            full.style.display = 'block';
+            short.style.display = 'none';
+            btn.textContent = '🔺 band karein';
+            btn.dataset.open = 'true'
+        }
+    }
+
+    function toggleChain(id, btn) {
+        const chain = document.getElementById('chain-' + id);
+        const isOpen = btn.dataset.open === 'true';
+        if (isOpen) {
+            chain.style.display = 'none';
+            btn.dataset.open = 'false';
+            btn.textContent = '🔻' + btn.textContent.replace('🔺', '').replace('🔻', '');
+        } else {
+            chain.style.display = 'block';
+            btn.dataset.open = 'true';
+            btn.textContent= '🔺' + btn.textContent.replace('🔺', '').replace('🔻', '');
+        }
+    }
+
+    function toggleReplyForm(id) {
+        const form = document.getElementById('chain-form-' + id);
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function toggleEditReply(id) {
+        const form = document.getElementById('editReplyForm-' + id);
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function resortSiblings(container) {
+        const cards = Array.from(container.querySelectorAll(':scope > .reply-card'));
+        const sorted = [...cards].sort((a, b) => {
+            return parseInt(b.dataset.score) - parseInt(a.dataset.score);
+        })
+        const order = sorted.map(card => card.id.replace('reply-', ''));
+        reorderReplies(container, order);
+    }
+
+    function reorderReplies(container, order) {
+        if (typeof container === 'string') container = document.querySelector(container);
+        if (!container) return;
+
+        const cards = {};
+        container.querySelectorAll(':scope > .reply-card').forEach(card => {
+            cards[card.id] = card;
+        });
+
+        const firstRects = {};
+        Object.keys(cards).forEach(id => {
+            firstRects[id] = cards[id].getBoundingClientRect();
+        });
+
+        order.forEach(id => {
+            const card = cards['reply-' + id];
+            if (card) container.appendChild(card);
+        });
+
+        Object.keys(cards).forEach(id => {
+            const card = cards[id];
+            const first = firstRects[id];
+            const last = card.getBoundingClientRect();
+            const deltaY = first.top - last.top;
+
+            if (deltaY !== 0) {
+                card.style.transform = `translateY(${deltaY}px)`;
+                card.style.transition = 'transform 0s';
+                requestAnimationFrame(() => {
+                    card.style.transform = '';
+                    card.style.transition = 'transform 400ms ease';
+                });
+            }
+        });
+    }
+    </script>
+    
+</body>
+</html>

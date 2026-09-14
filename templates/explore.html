@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="csrf-token" content="{{ csrf_token() }}"/>
+    <title>Explore - Opinion</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='explore.css') }}"/>
+</head>
+<body>
+
+    <nav>
+        <a href="/" class="logo">
+            <span class="home-icon">🏠</span>
+        </a>
+        <div class="nav-links">
+            <a href="/explore">Explore</a>
+            <a href="/trending">Trending</a>
+            <a href="/users">Our Users</a>
+            <a href="/court">Court</a>
+            {% if session.nickname %}
+                <a href="/messages" class="bell-icon">
+                    🔔
+                    {% if unread_count and unread_count > 0 %}
+                        <span class="notif-badge">{{ unread_count if unread_count <= 9 else '9+' }}</span>
+                    {% endif %}
+                </a>
+                <a href="{{ url_for('profile.profile', nickname=session.nickname) }}" class="user-hello">Hey, {{ session.nickname }}!</a>
+                <a href="/logout" class="btn-join">Logout</a>
+            {% else %}
+                <a href="/auth" class="btn-join">Join Now</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <section class="explore-section">
+        <div class="explore-search-wrap">
+            <input type="text" id="exploreSearchInput" class="explore-search-input"
+                   placeholder="Search topics..." autocomplete="off"/>
+        </div>
+
+        <div class="explore-tabs" id="exploreTabs">
+            <button type="button" class="tab-btn active" id="tabBtnForYou" onclick="switchTab('foryou')">For you</button>
+            <button type="button" class="tab-btn" id="tabBtnFollowing" onclick="switchTab('following')">Following</button>
+        </div>
+
+        <div class="explore-tab-content" id="tabForYou">
+            <div class="explore-results">
+                {% for topic in for_you_topics %}
+                <div class="explore-topic-card" id="explore-topic-{{ topic.id }}">
+                    <h3>{{ topic.title }}</h3>
+                    <p>{{ topic.description }}</p>
+                    <div class="explore-card-footer">
+                        <span class="explore-topic-meta">@{{ topic.nickname }} . {{ topic.time_ago }}</span>
+                        <button type="button" class="btn-heat {{ 'active' if topic.user_heated else '' }}"
+                                data-topic-id="{{ topic.id }}"
+                                onclick="toggleHeat('{{ topic.id }}', this)">
+                            🔥 <span class="heat-count">{{ topic.heat_count }}</span>   
+                        </button>
+                        <a href="/discuss/topic/{{ topic.id }}" class="btn-view-original">View Original ↗</a>
+                    </div>
+                </div>
+                {% else %}
+                <div class="explore-empty">Abhi koi topic nahi hai</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="explore-tab-content hidden" id="tabFollowing">
+            <div class="explore-results" id="followingResults"></div>
+            <div class="explore-empty hidden" id="followingEmpty">
+                Jinhe tum follow karoge unke topics yanha dikhenge
+            </div>
+        </div>
+
+        <div class="explore-results hidden" id="exploreResults"></div>
+        <div class="explore-empty hidden" id="exploreEmpty">Koi topic nahi milla</div>
+    </section>
+
+    <script>
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        const searchInput = document.getElementById('exploreSearchInput');
+        const resultsDiv = document.getElementById('exploreResults');
+        const emptyDiv = document.getElementById('exploreEmpty');
+        const tabsDiv = document.getElementById('exploreTabs');
+        const tabForYou = document.getElementById('tabForYou');
+        const tabFollowing = document.getElementById('tabFollowing');
+        const followingResultsDiv = document.getElementById('followingResults');
+        const followingEmptyDiv = document.getElementById('followingEmpty');
+        let debounceTimer = null;
+        let activeTab = 'foryou'
+
+        searchInput.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            const q = searchInput.value.trim();
+
+            if (q === '') {
+                resultsDiv.classList.add('hidden');
+                emptyDiv.classList.add('hidden');
+                tabsDiv.classList.remove('hidden');
+                switchTab(activeTab);
+                return;
+            }
+
+            tabsDiv.classList.add('hidden');
+            tabForYou.classList.add('hidden');
+            tabFollowing.classList.add('hidden');
+            resultsDiv.classList.remove('hidden');
+
+            debounceTimer = setTimeout(() => {
+                fetch(`/explore/search?q=${encodeURIComponent(q)}`)
+                    .then(res => res.json())
+                    .then(data => renderResults(data))
+                    .catch(err => console.error('Explore search failed:', err));
+            }, 250);
+        });
+
+        function switchTab(tab) {
+            activeTab = tab;
+            document.getElementById('tabBtnForYou').classList.toggle('active', tab === 'foryou');
+            document.getElementById('tabBtnFollowing').classList.toggle('active', tab === 'following');
+            tabForYou.classList.toggle('hidden', tab !== 'foryou');
+            tabFollowing.classList.toggle('hidden', tab !== 'following');
+
+            if (tab === 'following') {
+                loadFollowing();
+            }
+        }
+
+        function loadFollowing() {
+            fetch('/explore/following')
+                .then(res => {
+                    if (res.status === 401) {window.location.href = '/auth'; return null; }
+                    return res.json();
+                })
+                .then(topics => {
+                    if (!topics) return;
+                    renderTopics(topics, followingResultsDiv, followingEmptyDiv);
+                })
+                .catch(err => console.error('Following load failed:', err));
+        }
+
+        function toggleHeat(topicId, btnEl) {
+            fetch(`/discuss/topic/${topicId}/heat`, {
+                method: 'POST',
+                headers: { 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content }
+            })
+            .then(res => {
+                if (res.status === 401) { window.location.href = '/auth'; return null; }
+                return res.json();
+            })
+            .then(data => {
+                if (!data) return;
+                btnEl.querySelector('.heat-count').textContent = data.count;
+                btnEl.classList.toggle('active', data.heated);
+            })
+            .catch(err => console.error('Heat toggle failed', err));
+        }
+
+        function renderTopics(topics, container, emptyEl) {
+            resultsDiv.innerHTML = '';
+
+            if (topics.length === 0) {
+                emptyEl.classList.remove('hidden');
+                return;
+            }
+            emptyEl.classList.add('hidden');
+
+            topics.forEach(topic => {
+                const card = document.createElement('div');
+                card.className = 'explore-topic-card';
+                card.id = `explore-topic-${topic.id}`;
+                card.innerHTML = `
+                    <h3>${escapeHtml(topic.title)}</h3>
+                    <p>${escapeHtml(topic.description)}</p>
+                    <div class="explore-card-footer">
+                        <span class="explore-topic-meta">@${escapeHtml(topic.nickname)} . ${topic.time_ago}</span>
+                        <button type="button" class="btn-heat ${topic.user_heated ? 'active' : ''}" data-topic-id="${topic.id}"
+                            onclick="toggleHeat('${topic.id}', this)">
+                            🔥 <span class="heat-count">${topic.heat_count}</span>
+                        </button> 
+                        <a href="/discuss/topic/${topic.id}" class="btn-view-original">View Original ↗</a>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderResults(topics) {
+            renderTopics(topics, resultsDiv, emptyDiv);
+        }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="csrf-token" content="{{ csrf_token() }}"/>
+    <title>Discuss - Opinion</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='discuss.css') }}"/>
+    <script src="{{ url_for('static', filename='report.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='report.css') }}"/>
+</head>
+<body>
+    <nav>
+        <a href="/" class="logo">
+            <span class="home-icon">🏠</span>
+        </a>
+        <div class="nav-links">
+            <a href="/explore">Explore</a>
+            <a href="/trending">Trending</a>
+            <a href="/users">Our Users</a>
+            <a href="/court">Court</a>
+            {% if session.nickname %}
+                <a href="/messages" class="bell-icon">
+                    🔔
+                    {% if unread_count and unread_count > 0 %}
+                        <span class="notif-badge">{{ unread_count if unread_count <= 9 else '9+' }}</span>
+                    {% endif %}
+                </a>
+                <a href="{{ url_for('profile.profile', nickname=session.nickname) }}" class="user-hello">Hey, {{ session.nickname }}!</a>
+                <a href="/logout" class="btn-join">Logout</a>
+            {% else %}
+                <a href="/auth" class="btn-join">Join Now</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <section class="discuss-section">
+
+        <div class="topic-heading">
+            <h1 class="topic-heading-text">Topics<span class="gavel-dot">.</span></h1>
+            <div class="verdict-line"></div>
+        </div>
+
+        {% if topics %}
+            <div class="topics-list">
+                {% for topic in topics %}
+                <div class="topic-card" id="topic-{{ topic[0] }}">
+                    <div class="topic-header" onclick="toggleDesc('{{ loop.index }}')">
+                        <h3>{{ topic[2] }}</h3>
+                        <div class="topic-header-right">
+                            {% set heat_count = get_topic_heat_count(topic[0]) %}
+                            {% set user_heated = has_user_heated(session.nickname, topic[0]) %}
+                            <button type="button"
+                                    class="btn-heat {{ 'active' if user_heated else '' }}"
+                                    id="heat-{{ loop.index }}"
+                                    data-topic-id="{{ topic[0] }}"
+                                    onclick="event.stopPropagation(); toggleHeat('{{ topic[0] }}', this)">
+                                🔥 <span class="heat-count">{{ heat_count }}</span>
+                            </button>
+                            <span class="topic-arrow" id="arrow-{{ loop.index }}">🔻</span>
+                        </div>
+                    </div>
+                    <div class="topic-desc hidden" id="desc-{{ loop.index }}">
+                        <p>{{ topic[3] }}</p>
+                        <small>Posted by: <a href="/profile/{{ topic[1] }}" class="comment-user">@{{ topic[1] }}</a > . {{ time_ago(topic[4]) }}</small>
+                        {% set rc = get_topic_retain_count(topic[0]) %}
+                        {% if rc > 0 %}
+                            <small class="retained-tag">Retained {{ rc }} time{{ 's' if rc > 1 else '' }}</small>
+                        {% endif %}
+
+                        {% set topic_conclusions = get_topic_conclusions(topic[0]) %}
+                        <button type="button" class="btn-conclusion-toggle" onclick="toggleTopicConclusionPanel('{{ loop.index }}', this)">
+                            📜 Conclusions <span class="tc-arrow">🔻</span>
+                        </button>
+                        <div class="conclusion-panel" id="topicConclusionPanel-{{ loop.index }}">
+                            {% if topic_conclusions %}
+                                {% for tc in topic_conclusions %}
+                                <div class="conclusion-item">
+                                    <span class="conclusion-rank">#{{ loop.index }}</span>
+                                    <div class="conclusion-body">
+                                        <small class="conclusion-issue-label">On: {{ tc.issue_description[:60] }}{% if tc.issue_description|length > 60 %}...{% endif %}</small>
+                                        <small class="conclusion-user">@{{ tc.comment.nickname }}</small>
+                                        <p class="conclusion-text">{{ tc.comment.comment }}</p>
+                                        <span class="conclusion-votes">🖐 {{ tc.comment.conclusion_count }} support</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="conclusion-empty">ya to koi issue nahi bana ya to issue ke kisi comment ko conclusion vote nahi milla</p>
+                        {% endif %}
+                        </div>
+
+
+                        <div class="topic-footer">
+                            <a href="/discuss/topic/{{ topic[0] }}" class="btn-issues">Issues</a>
+                            <button type="button" class="btn-report"
+                                data-type="topic"
+                                data-id="{{ topic[0] }}"
+                                data-content="{{ topic[2] }}"
+                                data-postedby="{{ topic[1] }}"
+                                onclick="handleReportClick(this)">Report</button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="discuss-empty">
+                <p>Start a discussion</p>
+            </div>
+        {% endif %}
+    </section>
+
+    <button class="fab-btn" onclick="openModal()">+</button>
+
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
+    {% include "report_modal.html" %}
+
+    <div class="modal" id="topicModal">
+        <button class="modal-close" onclick="closeModal()">X</button>
+        <h2>Raise a Topic</h2>
+        <p class="warning-msg">⚠ Dhyaan se likhein kyunki submit hone ke baad edit nahi kar sakte aur 3 din baad delete bhi nahi kar sakte</p>
+        {% if request.args.get('error') == 'emoji' %}
+        <p class="error-msg">⚠ Sirf emoji submit nahi kar sakte!</p>
+        {% elif request.args.get('error') == 'abusive' %}
+        <p class="error-msg">⚠ Gaali ya hatefull sentences na likhein. Positive tareeke se baat karein...</p>
+        {% endif %}
+        <form method="POST" action="/discuss/add" onsubmit="return confirm('⚠ Dhyaan se topic likhein, submit karne ke baad edit karne ka option nahi millega, 3 din baad delete bhi nahi hoga')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <input type="text" name="title" placeholder="Topic title..." required maxlength="150"/>
+            <textarea name="description" placeholder="Apne topic ko explain karo 150 words ke andar..." required oninput="wordCount(this)"></textarea>
+            <small id="wordMsg">0 / 150 words</small>
+            <button type="submit" class="btn-primary">Post Topic</button>
+        </form>
+    </div>
+
+    <script>
+        function openModal() {
+            document.getElementById('topicModal').classList.add('active');
+            document.getElementById('modalOverlay').classList.add('active');
+        }
+        function closeModal() {
+            document.getElementById('topicModal').classList.remove('active');
+            document.getElementById('modalOverlay').classList.remove('active');
+        }
+        function wordCount(el) {
+            const words = el.value.trim() === '' ? 0 : el.value.trim().split(/\s+/).length;
+            document.getElementById('wordMsg').textContent = words + ' / 150 words';
+            if (words > 150) {
+                el.value = el.value.trim().split(/\s+/).slice(0, 150).join(' ');
+            }
+        }
+        function toggleDesc(index) {
+            const desc = document.getElementById('desc-' + index);
+            const arrow = document.getElementById('arrow-' + index);
+            desc.classList.toggle('hidden');
+            arrow.textContent = desc.classList.contains('hidden') ? '🔻' : '🔺';
+        }
+        function toggleTopicConclusionPanel(index, btnEl) {
+            const panel = document.getElementById('topicConclusionPanel-' + index);
+            const arrow = btnEl.querySelector('.tc-arrow');
+            panel.classList.toggle('open');
+            arrow.textContent = panel.classList.contains('open') ? '🔺' : '🔻';
+        }
+        function toggleHeat(topicId, btnEl) {
+            fetch(`/discuss/topic/${topicId}/heat`, {
+                method: 'POST',
+                headers: { 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content }
+            })
+            .then(res => {
+                if (res.status === 401) {
+                    window.location.href = '/auth';
+                    return null;
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (!data) return;
+                btnEl.querySelector('.heat-count').textContent = data.count;
+                btnEl.classList.toggle('active', data.heated);
+            })
+            .catch(err => console.error('Heat toggle failed', err));
+        }
+        
+    </script>
+</body>
+</html>

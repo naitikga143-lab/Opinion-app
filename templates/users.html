@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width" initia-scale="1.0"/>
+    <title>Our Users</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='users.css') }}"/>
+</head>
+<body>
+    <nav>
+        <a href="/" class="logo">
+            <span class="home-icon">🏠</span>
+        </a>
+        <div class="nav-links">
+            <a href="/explore">Explore</a>
+            <a href="/trending">Trending</a>
+            <a href="/users">Our Users</a>
+            <a href="/court">Court</a>
+            {% if session.nickname %}
+              <a href="/messages" class="bell-icon">
+                🔔
+                {% if unread_count and unread_count > 0 %}
+                    <span class="notif-badge">{{ unread_count if unread_count <= 9 else '9+' }}</span>
+                {% endif %}
+            </a>
+              <a href="{{ url_for('profile.profile', nickname=session.nickname) }}" class="user-hello">Hey, {{ session.nickname }}!</a>
+              <a href="/logout" class="btn-join">Logout</a>
+            {% else %}
+              <a href="/auth" class="btn-join">Join Now</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <section class="users-section">
+        <p class="tag">Community</p>
+        <h2>Our users</h2>
+        <p class="desc">user ka profile search karein</p>
+
+        <form action="/search" method="GET" class="search-box">
+            <input type="text" name="q" placeholder="Nickname likhein. . . " required/>
+            <button type="submit">Search</button>
+        </form>
+
+        {% if search_error %}
+        <p class="error-msg">⚠ {{ search_error }}</p>
+        {% endif %}
+    </section>
+    
+</body>
+</html>

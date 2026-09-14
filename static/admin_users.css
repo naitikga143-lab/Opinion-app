@@ -1,0 +1,67 @@
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.admin-table th {
+    text-align: left;
+    padding: 0.7rem 1rem;
+    color: var(--gold);
+    border-bottom: 1px solid #333;
+    font-weight: bold;
+}
+
+.admin table td {
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid #1e1e1e;
+    color: #f5f0e8;
+    vertical-align: middle;
+}
+
+.admin-table tr:hover {
+    background: #111;
+}
+
+.status-active {
+    color: #4caf50;
+    font-weight: bold;
+    font-size: 0.82rem;
+}
+
+.status-banned {
+    color: #e85a5a;
+    font-weight: bold;
+    font-size: 0.82rem;
+}
+
+.btn-ban {
+    background: #e83a2f;
+    color: white;
+    border: none;
+    padding: 4px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-family: Georgia, serif;
+}
+
+.btn-ban:hover {
+    background-color: #c0392b;
+}
+
+.btn-unban {
+    background: #2ecc71;
+    color: #0a0a0a;
+    border: none;
+    padding: 4px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-family: Georgia, serif;
+}
+
+.btn-unban:hover {
+    background: #27ae60;
+}

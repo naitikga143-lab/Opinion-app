@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Admin - Opinion</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin_users.css') }}"/>
+</head>
+<body>
+    <nav>
+        <a href="/" class="logo">
+            <span class="home-icon">🏠</span>
+        </a>
+        <div class="nav-links">
+            <span style="color:#d4a843;">Admin Panel</span>
+            <a href="/admin/logout" class="btn-join">Logout</a>
+            <a href="/admin/court" class="btn-join">Court</a>
+        </div>
+    </nav>
+
+    <section style="padding: 2rem 3rem;">
+        <h2 style="margin-bottom:0.5rem;">All Users</h2>
+        <p style="color:#666; margin-bottom:2rem;">
+            Total: {{ users|length }} users
+        </p>
+
+        <table class="admin-table">
+            <thread>
+                <tr>
+                    <th>User ID</th>
+                    <th>Nickname</th>
+                    <th>Email</th>
+                    <th>Joined</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thread>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user[0] }}</td>
+                    <td>{{ user[1] }}</td>
+                    <td>{{ user[2] }}</td>
+                    <td>{{ user[4][:10] }}</td>
+                    <td>
+                        {% if user[3] == 1 %}
+                          <span class="status-banned">Banned</span>
+                        {% else %}
+                          <span class="status-active">Active</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if user[3] == 1 %}
+                            <form method="POST" action="/admin/unban/{{ user[0] }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <button type="submit" class="btn-unban">Unban</button>
+                            </form>
+                        {% else %}
+                            <form method="POST" action="/admin/ban/{{ user[0] }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <button type="submit" class="btn-ban">Ban</button>
+                            </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+</body>
+</html>

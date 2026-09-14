@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Notifications - Opinion</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='message.css') }}"/>
+</head>
+<body>
+    <nav>
+        <a href="/" class="logo"><span class="home-icon">🏠</span></a>
+        <div class="nav-links">
+            <a href="/explore">Explore</a>
+            <a href="/trending">Trending</a>
+            <a href="/users">Our users</a>
+            <a href="/court">Court</a>
+            {% if session.nickname %}
+                <a href="/messages" class="bell-icon">
+                    🔔
+                    {% if unread_count and unread_count > 0 %}
+                        <span class="notif-badge">{{ unread_count if unread_count <= 9 else '9+' }}</span>
+                    {% endif %}
+                </a>
+                <a href="{{ url_for('profile.profile', nickname=session.nickname) }}" class="user-hello">Hey, {{ session.nickname }}!</a>
+                <a href="/logout" class="btn-join">Logout</a>
+            {% else %}
+                <a href="/auth" class="btn-join">Join Now</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <section class="messages-section">
+        <div class="messages-header">
+            <h2>Notifications</h2>
+            {% if notifications %}
+            <form action="/messages/delete-all" method="POST" onsubmit="return confirm('Aap saare notifications delete karna chahte hain ?')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn-delete-all">Delete all</button>
+            </form>
+            {% endif %}
+        </div>
+        
+        {% if notifications %}
+        {% for n in notifications %}
+        <div class="notif-item {{ 'unread' if n[3] == 0 else '' }}">
+            {% if n[4] %}
+            <a href="{{ n[4] }}" class="notif-link">
+            {% endif %}
+                <p>{{ n[1] }}</p>
+                <small>{{ n[2] }}</small>
+                {% if n[4] %}
+                <span class="notif-goto">Go to original ↗</span>
+                {% endif %}
+            {% if n[4] %}
+            </a>
+            {% endif %}
+
+            <form action="/messages/delete/{{ n[0] }}" method="POST" class="notif-delete-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn-delete-notif" title="Delete">X</button>
+            </form>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p class="desc">Koi notification nahi hai</p>
+        {% endif %}
+    </section>
+</body>
+</html>

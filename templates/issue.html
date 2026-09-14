@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="csrf-token" content="{{ csrf_token() }}"/>
+    <title>Issue - Opinion</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='issue.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='report.css') }}"/>
+    <script src="{{ url_for('static', filename='report.js') }}"></script>
+</head>
+<body>
+    <nav>
+        <a href="/" class="logo">
+            <span class="home-icon">🏠</span>
+        </a>
+        <div class="nav-links">
+            <a href="/explore">Explore</a>
+            <a href="/trending">Trending</a>
+            <a href="/users">Our Users</a>
+            <a href="/court">Court</a>
+            {% if session.nickname %}
+                <a href="/messages" class="bell-icon">
+                    🔔
+                    {% if unread_count and unread_count > 0 %}
+                        <span class="notif-badge">{{ unread_count if unread_count <= 9 else '9+' }}</span>
+                    {% endif %}
+                </a>
+                <a href="{{ url_for('profile.profile', nickname=session.nickname) }}" class="user-hello">Hey, {{ session.nickname }}!</a>
+                <a href="/logout" class="btn-join">Logout</a>
+            {% else %}
+                <a href="/auth" class="btn-join">Join Now</a>
+            {% endif %}
+        </div>
+    </nav>
+    <section class="issue-detail">
+        <a href="/discuss/topic/{{ topic[0] }}" class="back-link">🔙 Back to issue</a>
+        <h1 class="issue-heading">{{ issue[3] }}</h1>
+        {% if issue[6] %}<span class="edited-tag">(edited)</span>{% endif %}
+
+        {% set rc = get_issue_retain_count(issue[0]) %}
+        {% if rc > 0 %}
+            <small class="retained-tag">Retained {{ rc }} time{{ 's' if rc > 1 else '' }}</small>
+        {% endif %}
+
+        
+        {% if session.nickname == issue[2] %}
+        <button class="btn-edit" onclick="toggleEditIssue()">Edit</button>
+        <div class="edit-form" id="editIssueForm" style="display: none;">
+            <form method="POST" action="/discuss/topic/{{ topic[0] }}/issue/{{ issue[0] }}/edit">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <textarea name="description">{{ issue[3] }}</textarea>
+                <button type="submit">Save</button>
+            </form>
+        </div>
+        {% endif %}
+
+
+        <p class="issue-meta">Posted in: <span>{{ topic[2] }}</span></p>
+
+        {% if request.args.get('error') == 'short' %}
+        <p class="error-msg">⚠ 15 se zyada words likhein! discussion mein participate karne ke liye</p>
+        {% elif request.args.get('error') == 'emoji' %}
+        <p class="error-msg">⚠ sirf emoji waale comments post na karein topic se related baat karein! dhanyawaad</p>
+        {% elif request.args.get('error') == 'abusive' %}
+        <p class="error-msg">⚠ Gaali ya hateful language mat use karo. Unbiased hoke shaanti se discussion karo agar saamne waala koi galat baat bol raha hai to usse report karo</p>
+        {% endif %}
+
+        <h2 class="comments-title">Comment</h2>
+
+        {% if comments %}
+            <div class="comments-list">
+                {% for c in comments %}
+                <div class="comment-card" id="comment-{{ c.id }}">
+                    <div class="comment-top">
+                        <a href="/profile/{{ c.nickname }}" class="comment-user">@{{ c.nickname }}</a>
+                        <span class="comment-time">{{ time_ago_comments(c.created_at) }}</span>
+                    </div>
+                    <p class="comment-text">{{ c.comment }}</p>
+                    {% if c.edited  %}<span class="edited-tag">(edited)</span>{% endif %}
+
+                    {% set rc = get_comment_retain_count(c.id) %}
+                    {% if rc > 0 %}
+                        <small class="retained-tag">Retained {{ rc }} time{{ 's' if rc > 1 else '' }}</small>
+                    {% endif %}
+
+                    {% if session.nickname == c.nickname %}
+                    <button class="btn-edit" onclick="toggleEditComment('{{ c.id }}')">Edit</button>
+                    <div class="edit-form" id="editCommentForm-{{ c.id }}" style="display: none;">
+                        <form method="POST" action="/discuss/topic/{{ topic[0] }}/issue/{{ issue[0] }}/comment/{{ c.id }}/edit">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <textarea name="comment">{{ c.comment }}</textarea>
+                            <button type="submit">Save</button>
+                        </form>
+                    </div>
+                    {% endif %}
+
+                    <div class="comment-votes" data-comment-id="{{ c.id }}">
+                        <button type="button" class="vote-btn like-btn {% if c.user_vote == 1 %}voted{% endif %}" onclick="castVote('{{ c.id }}', 1, this)">
+                            👍 <span class="like-count">{{ c.likes }}</span>
+                        </button>
+                        <button type="button" class="vote-btn dislike-btn {% if c.user_vote == -1 %}voted{% endif %}" onclick="castVote('{{ c.id }}', -1, this)">
+                            👎 <span class="dislike-count">{{ c.dislikes }}</span>
+                        </button>
+                    </div>
+                    <button type="button" class="vote-btn conclusion-btn {% if c.user_supported_conclusion %}voted{% endif %}"
+                        data-comment-id="{{ c.id }}"
+                        onclick="castConclusionVote('{{ c.id }}', this)">
+                        🖐 I support this comment as conclusion (<span class="conclusion-count">{{ c.conclusion_count }}</span>)
+                    </button>
+                    <button type="button" class="btn-report"
+                        data-type="comment"
+                        data-id="{{ c.id }}"
+                        data-content="{{ c.comment }}"
+                        data-postedby="{{ c.nickname }}"
+                        onclick="handleReportClick(this)">Report</button>
+                    
+                    {% if session.nickname == c.nickname %}
+                    <form method="POST"
+                          action="/discuss/topic/{{ topic[0] }}/issue/{{ issue[0] }}/comment/{{ c.id }}/delete"
+                          class="delete-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <button type="submit" class="btn-delete-reply" onclick="return confirm('Aapka comment aur uske andar ke replies, sab delete ho jaenge !')">
+                            Delete
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    <div class="reply-link-wrap">
+                        {%if c.replies_enabled %}
+                        <a href="/reply/{{ c.id }}" class="btn-reply">
+                            Replies ({{ get_reply_count(c.id) }})
+                        </a>
+                        {% else %}
+                        <span class="btn-reply btn-reply-disabled">Replies Off</span>
+                        {% endif %}
+
+                        {% if session.nickname == c.nickname %}
+                        <button type="button" class="reply-toggle-switch {{ 'on' if c.replies_enabled else 'off' }}"
+                                onclick="toggleReplies('{{ c.id }}', this)">
+                                <span class="switch-knob"></span>
+                            </button>
+                            {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="comments-empty">
+                <p>Be the first to comment!</p>
+            </div>
+        {% endif %}
+    </section>
+
+    <button class="fab-btn fab-blue" onclick="openModal()">+</button>
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
+    {% include "report_modal.html" %}
+    <div class="modal" id="commentModal">
+        <button class="modal-close" onclick="closeModal()">X</button>
+        <h2>Add a Comment</h2>
+        <form method="POST" action="/discuss/topic/{{ topic[0] }}/issue/{{ issue[0] }}/comment">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <textarea name="comment" placeholder="Debate mein apna yogdaan dein...(hatefull language na use karein, kam se kam 15 words, sirf emoji post na karein)" required oninput="wordCount(this)"></textarea>
+            <small id="wordMsg">0 words - min 15 required</small>
+            <button type="submit" class="btn-primary">Post Comment</button>
+        </form>
+    </div>
+
+    <script>
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedId = sessionStorage.getItem('commentScrollId');
+            const scrollBottom = sessionStorage.getItem('commentScrollBottom');
+
+            if (savedId) {
+                const el = document.getElementById(savedId);
+                if (el) {
+                    el.scrollIntoView({ block: 'center' });
+                }
+                sessionStorage.removeItem('commentScrollId');
+            }else if (scrollBottom) {
+                const cards = document.querySelectorAll('.comment-card');
+                if (cards.length > 0) {
+                    cards[cards.length -1].scrollIntoView({ block: 'center' });
+                }
+                sessionStorage.removeItem('comentScrollBottom');
+            }
+        });
+
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', () => {
+                const card = form.closest('.comment-card');
+
+                if (card) {
+
+                    const isDelete = form.classList.contains('delete-form');
+
+                    if (isDelete) {
+                        const prev = card.previousElementSibling;
+                        const next = card.nextElementSibling;
+                        if (prev && prev.classList.contains('comment-card')) {
+                            sessionStorage.setItem('commentScrollId', prev.id);
+                        } else if (next && next.classList.contains('comment-card')) {
+                            sessionStorage.setItem('commentScrollId', next.id);
+                        }
+
+                    } else {
+                        sessionStorage.setItem('commentScrollId', card.id);
+                    }
+                }else {
+                    sessionStorage.setItem('commentScrollBottom', 'true');
+                }
+            });
+        });
+
+        function openModal() {
+            document.getElementById('commentModal').classList.add('active');
+            document.getElementById('modalOverlay').classList.add('active');
+        }
+        function closeModal() {
+            document.getElementById('commentModal').classList.remove('active');
+            document.getElementById('modalOverlay').classList.remove('active');
+        }
+        function wordCount(el) {
+            const words = el.value.trim() === '' ? 0 : el.value.trim().split(/\s+/).length;
+            const msg = document.getElementById('wordMsg');
+            msg.textContent = words + ' words - min 15 required';
+            msg.style.color = words >= 15 ? '#4caf50' : '#666';
+        }
+        function toggleEditIssue() {
+            const form = document.getElementById('editIssueForm');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+        function toggleEditComment(id) {
+            const form = document.getElementById('editCommentForm-' + id);
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+        function castVote(commentId, voteVal, btnEl) {
+            const container = btnEl.closest('.comment-votes');
+            const formData = new URLSearchParams();
+            formData.append('vote', voteVal);
+            formData.append('csrf_token', '{{ csrf_token() }}');
+
+            fetch(`/vote/${commentId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData
+            })
+            .then(res => {
+                if (res.status === 401) {
+                    window.location.href = '/auth';
+                    return null;
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (!data) return;
+                const likeBtn = container.querySelector('.like-btn');
+                const dislikeBtn = container.querySelector('.dislike-btn');
+                likeBtn.querySelector('.like-count').textContent = data.likes;
+                dislikeBtn.querySelector('.dislike-count').textContent = data.dislikes;
+
+                likeBtn.classList.toggle('voted', data.user_vote === 1);
+                dislikeBtn.classList.toggle('voted', data.user_vote === -1);
+
+                if (data.order) {
+                    reorderComments(data.order);
+                }
+            })
+            .catch(err => console.error('Vote failed:', err));
+        }
+
+        function castConclusionVote(commentId, btnEl) {
+            fetch(`/comment/conclusion/${commentId}`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content }
+            })
+            .then(res => {
+                if (res.status === 401) {
+                    window.location.href = '/auth';
+                    return null;
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (!data) return;
+                btnEl.querySelector('.conclusion-count').textContent = data.count;
+                btnEl.classList.toggle('voted', data.supported);
+
+                if (data.order) {
+                    reorderComments(data.order);
+                }
+            })
+            .catch(err => console.error('Conclusion vote failed:', err));
+        }
+
+        function toggleReplies(commentId, btnEl) {
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            if (!csrfMeta) {
+                alert('CSRF token nahi milla. page reload karo.');
+                return;
+            }
+            fetch(`/comment/${commentId}/toggle-replies`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfMeta.content
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const card = btnEl.closest('.comment-card');
+                    if (card) {
+                        sessionStorage.setItem('commentScrollId', card.id);
+                    }
+                    location.reload();
+                } else {
+                    alert('Kuch galat ho gaya, dobara try karein');
+                }
+            })
+            .catch(() => alert('Kuch galat ho gaya, dobara try karein'));
+        }
+
+        function reorderComments(order) {
+            const list = document.querySelector('.comments-list');
+            const cards = {};
+            list.querySelectorAll('.comment-card').forEach(card => {
+                cards[card.id] = card;
+            });
+
+            const firstRects = {};
+            Object.keys(cards).forEach(id => {
+                firstRects[id] = cards[id].getBoundingClientRect();
+            });
+
+            order.forEach(id => {
+                const card = cards['comment-' + id];
+                if (card) list.appendChild(card);
+            }); 
+
+            Object.keys(cards).forEach(id => {
+                const card = cards[id];
+                const first = firstRects[id];
+                const last = card.getBoundingClientRect();
+                const deltaY = first.top -last.top;
+
+                if (deltaY !== 0) {
+                    card.style.transform = `translateY(${deltaY}px)`;
+                    card.style.transition = 'transform 0s';
+                    requestAnimationFrame(() => {
+                        card.style.transform = '';
+                        card.style.transition = 'transform 400ms ease';
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html>

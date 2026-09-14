@@ -1,0 +1,39 @@
+.auth-section {
+    max-width: 400px;
+    margin: 5rem auto;
+    padding: 2rem;
+    background: #1a1a1a;
+    background: 1px solid #222;
+    border-radius: 10px;
+}
+
+.auth-section h2 {
+    color: var(--gold);
+    font-family: Georgia, serif;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.auth-section input[type="password"] {
+    width: 100%;
+    padding: 0.7rem 1rem;
+    background: #0a0a0a;
+    border: 1px solid #333;
+    border-radius: 6px;
+    color: var(--white);
+    font-size: 0.95rem;
+    font-family: Georgia, serif;
+    box-sizing: border-box;
+    margin-bottom: 1rem;
+}
+
+.auth-section input[type="password"]:focus {
+    outline: none;
+    border-color: var(--gold);
+}
+
+.error-msg {
+    color: #e85a5a;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+}

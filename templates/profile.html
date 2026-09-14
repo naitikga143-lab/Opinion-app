@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width", initial-scale="1.0"/>
+        <title>{{ nickname }} - Opinion</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
+        <link rel="stylesheet" href="{{ url_for('static', filename='profile.css') }}"/>
+    </head>
+    {% if request.args.get('delete_failed') %}
+    <div id="deleteToast">
+        Ab aap ye topic delete nahi kar saktein.<br>
+    </div>
+    {% endif %}
+
+    <body>
+        <nav>
+        <a href="/" class="logo">
+            <span class="home-icon">🏠</span>
+        </a>
+        <div class="nav-links">
+            <a href="/explore">Explore</a>
+            <a href="/trending">Trending</a>
+            <a href="/users">Our Users</a>
+            <a href="/court">Court</a>
+            {% if session.nickname %}
+              <a href="/messages" class="bell-icon">
+                🔔
+                {% if unread_count and unread_count > 0 %}
+                    <span class="notif-badge">{{ unread_count if unread_count <= 9 else '9+' }}</span>
+                {% endif %}
+            </a>
+              <a href="{{ url_for('profile.profile', nickname=session.nickname) }}" class="user-hello">Hey, {{ session.nickname }}!</a>
+              <a href="/logout" class="btn-join">Logout</a>
+            {% else %}
+              <a href="/auth" class="btn-join">Join Now</a>
+            {% endif %}
+        </div>
+    </nav>
+
+        <section class="profile-section">
+            <div class="profile-avatar">
+                {{ nickname[0].upper() }}
+            </div>
+            <h2>{{ nickname }}</h2>
+            <p class="tag">Opinion Member</p>
+
+            <p class="follow-stats">
+                <span class="stat-link" onclick="openFollowList('followers')">{{ followers_count }} Followers</span>
+                .
+                <span class="stat-link" onclick="openFollowList('following')">{{ following_count }} Following</span>
+            </p>
+
+            <div id="followListModal" class="follow-list-modal hidden">
+                <div class="follow-list-box">
+                    <div class="follow-list-header">
+                        <h4 id="followListTitle">Followers</h4>
+                        <span class="follow-list-close" onclick="closeFollowList()">&times;</span>
+                    </div>
+                    <div id="followListContent" class="follow-list-content"></div>
+                </div>
+            </div>
+
+            {% if not is_owner and session.get('nickname') %}
+                <form method="POST" action="{% if following %}/unfollow/{{ nickname }}{% else %}/follow/{{ nickname}}{% endif %}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button type="submit" class="{% if following %}btn-unfollow{% else %}btn-follow{% endif %}">
+                        {% if following %}Unfollow{% else %}Follow{% endif %}
+                    </button>
+                </form>
+            {% endif %}
+
+
+            <div class="profile-tabs">
+                <button class="tab-btn active" onclick="switchTab('topics', this)">My Topics</button>
+                <button class="tab-btn" onclick="switchTab('issues', this)">My Issues</button>
+            </div>
+
+            <div id="tab-topics" class="tab-content">
+                {% if topics %}
+                    {% for topic in topics %}
+                    <div class="topic-card">
+                        <div class="topic-header" onclick="toggleDesc('{{ loop.index }}')">
+                            <h3>{{ topic[2] }}</h3>
+                            <span class="topic-arrow" id="arrow-{{ loop.index }}">🔻</span>
+                        </div>
+                        <div class="topic-desc hidden" id="desc-{{ loop.index }}">
+                            <p>{{ topic[3] }}</p>
+                            <a class="issue-link" href="/discuss#topic-{{ topic.id }}">View original ↗</a>
+                            {% if is_owner %}
+                                {% set created = topic[4] %}
+                                <form method="POST" action="/discuss/delete/{{ topic[0] }}" onsubmit="return confirm('Delete this topic?')">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <button type="submit" class="btn-ban">Delete</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="desc">Apne abhi tak koi topic post nahi kiya hai</p>
+                {% endif %}
+            </div>
+
+            <div id="tab-issues" class="tab-content hidden">
+                {% if issues %}
+                    {% for issue in issues %}
+                    <div class="issue-card">
+                        <p class="issue-desc">{{ issue[2] }}</p>
+                        <a class="issue-link" href="/discuss/topic/{{ issue[1] }}#issue-{{ issue[0] }}">View on topic ↗</a>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="desc">Aapne abhi tak koi issue raise nahi kiya hai</p>
+                {% endif %}
+            </div>
+        </section>
+
+        <script>
+            function toggleDesc(index) {
+                const desc = document.getElementById('desc-' + index);
+                const arrow = document.getElementById('arrow-' + index);
+                desc.classList.toggle('hidden');
+                arrow.textContent = desc.classList.contains('hidden') ? '🔻' : '🔺';
+            }
+
+            function openFollowList(type) {
+                const modal = document.getElementById('followListModal');
+                const title = document.getElementById('followListTitle');
+                const content = document.getElementById('followListContent');
+
+                title.textContent = type === 'followers' ? 'Followers' : 'Following';
+                content.innerHTML = 'Loading...';
+                modal.classList.remove('hidden');
+
+                fetch(`/profile/{{ nickname }}/${type}`)
+                    .then(res => res.json())
+                    .then(list => {
+                        if (list.length === 0) {
+                            content.innerHTML = `<p class="desc">${type === 'followers' ? 'Koi follower nahi hai' : 'Kisi ko follow nahi kiya hai'}</p>`;
+                            return;
+                        }
+                        content.innerHTML = '';
+                        list.forEach(name => {
+                            const item = document.createElement('a');
+                            item.href = `/profile/${name}`;
+                            item.className = 'follow-list-item';
+                            item.textContent = name;
+                            content.appendChild(item);
+                        });
+                    })
+                    .catch(err => {
+                        content.innerHTML = '<p class="desc">Load nahi ho paya</p>';
+                        console.error('Follow list load failed:', err);
+                    });
+            }
+
+            function closeFollowList() {
+                document.getElementById('followListModal').classList.add('hidden');
+            }
+
+            function switchTab(tab, btn) {
+                document.getElementById('tab-topics').classList.toggle('hidden', tab !== 'topics');
+                document.getElementById('tab-issues').classList.toggle('hidden', tab !== 'issues');
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            }
+
+        </script>
+    </body>
+</html>
