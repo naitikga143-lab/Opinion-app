@@ -28,8 +28,8 @@ def reply_page(comment_id):
     if not comment:
         return "Comment nahi milla (delete ho chuka hoga)", 404
 
-    issue_id = comment[1]
-    topic_id = comment[2]
+    issue_id = comment['issue_id']
+    topic_id = comment['topic_id']
     replies = get_replies(comment_id)
 
     nickname = session.get('nickname')
@@ -84,7 +84,7 @@ def reply_page(comment_id):
                 direct_target = get_reply_owner(parent_reply_id)
                 direct_message = f"Aapke reply pe {replier_nickname} ne reply diya hai :-\n{reply_text}"
             else:
-                direct_target = comment[3]
+                direct_target = comment['nickname']
                 direct_message = f"Aapke comment pe {replier_nickname} ne reply diya hai :-\n{reply_text}"
 
             if direct_target and direct_target != replier_nickname:
@@ -94,7 +94,7 @@ def reply_page(comment_id):
                 except Exception as e:
                     print("direct reply notify failed:", e)
 
-            comment_owner = comment[3]
+            comment_owner = comment['nickname']
             if comment_owner and comment_owner != replier_nickname:
                 try:
                     comment_link = f"/discuss/topic/{topic_id}/issue/{issue_id}#comment-{comment_id}"

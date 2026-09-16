@@ -6,7 +6,7 @@ conn = sqlite3.connect(DB)
 
 c = conn.cursor()
 
-c.execute("SELECT to_regclass('public.replies')")
+c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='replies'")
 exists = c.fetchone() is not None
 
 old_data =[]

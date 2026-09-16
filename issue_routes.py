@@ -108,7 +108,7 @@ def vote(comment_id):
     new_user_vote, action = toggle_vote(comment_id, session['nickname'], vote_val)
     likes, dislikes = get_votes(comment_id)
 
-    issue_id = comment[1]
+    issue_id = comment['issue_id']
     sorted_comments = get_comments(issue_id)
     order = [c[0] for c in sorted_comments]
 
@@ -152,7 +152,7 @@ def conclusion_vote(comment_id):
     supported = toggle_conclusion_vote(comment_id, session['nickname'])
     count = get_conclusion_count(comment_id)
 
-    issue_id = comment[1]
+    issue_id = comment['issue_id']
     sorted_comments = get_comments(issue_id)
     order = [c[0] for c in sorted_comments]
 

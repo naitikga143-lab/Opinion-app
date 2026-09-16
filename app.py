@@ -74,7 +74,6 @@ init_court_delete_votes_table()
 init_message_tables()
 init_interactions_table()
 init_follows_table()
-run_migrations()
 
 
 app.register_blueprint(admin_bp)

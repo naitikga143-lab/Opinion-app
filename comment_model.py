@@ -54,7 +54,6 @@ def add_comment(issue_id, topic_id, nickname, comment):
 
 def get_comments(issue_id):
     conn = sqlite3.connect(DB)
-    conn.row_factory = sqlite3.Row
     c = conn.cursor()
     c.execute('''
         SELECT c.*,
@@ -65,7 +64,7 @@ def get_comments(issue_id):
         WHERE c.issue_id = ?
         ORDER BY conclusion_count DESC, (like_count - dislike_count) DESC, c.created_at ASC
     ''', (issue_id,))
-    comments = [dict(row) for row in c.fetchall()]
+    comments = c.fetchall()
     conn.close()
     return comments
 
@@ -76,7 +75,7 @@ def get_comments_by_id(comment_id):
     c.execute('SELECT * FROM comments WHERE id = ?', (comment_id,))
     row = c.fetchone()
     conn.close()
-    return dict(row) if row else None
+    return row
 
 def update_comment(comment_id, nickname, new_comment):
     if contains_abuse(new_comment):

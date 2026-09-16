@@ -10,7 +10,7 @@ def init_replies_table():
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS replies (
-              id SERIAL PRIMARY KEY AUTOINCREMENT,
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
               comment_id INTEGER NOT NULL,
               parent_reply_id INTEGER NOT NULL,
               nickname TEXT NOT NULL,
