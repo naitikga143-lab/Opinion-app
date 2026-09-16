@@ -1,5 +1,4 @@
-import psycopg2
-import os
+import sqlite3
 import re
 
 DB = 'opinion.db'
@@ -14,7 +13,7 @@ def search_topics(query):
     if not query:
         return get_all_topics_for_explore()
 
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
     c.execute('SELECT * FROM topics ORDER BY created_at DESC')
     all_topics = c.fetchall()
@@ -31,7 +30,7 @@ def search_topics(query):
     return matched
 
 def get_all_topics_for_explore():
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
     c.execute('SELECT * FROM topics ORDER BY created_at DESC')
     topics = c.fetchall()

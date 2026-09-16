@@ -1,10 +1,8 @@
-import psycopg2
-import os
-from dotenv import load_dotenv
+import sqlite3
 
-load_dotenv()
+DB = 'opinion.db'
 
-conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+conn = sqlite3.connect(DB)
 
 c = conn.cursor()
 
@@ -19,7 +17,7 @@ if exists:
 
 c.execute('''
     CREATE TABLE replies (
-        id SERIAL PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         comment_id INTEGER NOT NULL,
         parent_reply_id INTEGER,
         nickname TEXT NOT NULL,
@@ -30,7 +28,7 @@ c.execute('''
 
 if old_data:
     c.executemany(
-        "INSERT INTO replies (id, comment_id, parent_reply_id, nickname, reply_text, created_at) VALUES (%s, %s, %s, %s, %s, %s)",
+        "INSERT INTO replies (id, comment_id, parent_reply_id, nickname, reply_text, created_at) VALUES (?, ?, ?, ?, ?, ?)",
         old_data
     )
 

@@ -1,22 +1,24 @@
-import psycopg2
+import sqlite3
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
-conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+DB = 'opinion.db'
+
+conn = sqlite3.connect(DB)
 c = conn.cursor()
 
 for col in ['reason1_upvotes', 'reason2_upvotes', 'reason3_upvotes']:
     try:
         c.execute(f"ALTER TABLE court_reasons ADD COLUMN {col} INTEGER DEFAULT 0")
-    except psycopg2.errors.DuplicateColumn as e:
+    except sqlite3.OperationalError as e:
         conn.rollback()
         print(f"{col} already exists, skipping")
 
 c.execute('''
     CREATE TABLE IF NOT EXISTS court_reason_upvotes (
-        id SERIAL PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         entry_id INTEGER NOT NULL,
         slot_num INTEGER NOT NULL,
         nickname TEXT NOT NULL,
@@ -26,7 +28,7 @@ c.execute('''
 
 try:
     c.execute("ALTER TABLE court_entries ADD COLUMN justification TEXT")
-except psycopg2.errors.DuplicateColumn as e:
+except sqlite3.OperationalError as e:
     conn.rollback()
     print("justification already exists, skipping")
 

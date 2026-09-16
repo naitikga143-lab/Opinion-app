@@ -1,6 +1,10 @@
-import psycopg2
+import sqlite3
 import os
 from dotenv import load_dotenv
+
+load_dotenv()
+
+DB = 'opinion.db'
 
 def run_migration_step(conn, c, sql, params=None):
     try:
@@ -14,7 +18,7 @@ def run_migration_step(conn, c, sql, params=None):
         print(f"Migration step skipped/failed: {e}")
 
 def run_migrations():
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
 
     
@@ -58,7 +62,7 @@ def run_migrations():
     
     run_migration_step(conn, c, '''
             CREATE TABLE IF NOT EXISTS reply_votes (
-                id SERIAL PRIMARY KEY,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 reply_id INTEGER NOT NULL,
                 nickname TEXT NOT NULL,
                 vote TEXT NOT NULL,
@@ -70,11 +74,11 @@ def run_migrations():
     print("Setup complete")
 
 def init_issue_votes_table():
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS issue_votes (
-            id SERIAL PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             issue_id INTEGER NOT NULL,
             nickname TEXT NOT NULL,
             vote TEXT NOT NULL,
@@ -83,3 +87,6 @@ def init_issue_votes_table():
     ''')
     conn.commit()
     conn.close()
+
+if __name__ == "__main__":
+    run_migrations()

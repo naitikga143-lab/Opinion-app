@@ -1,5 +1,4 @@
-import psycopg2
-import os
+import sqlite3
 from profanity_filter import contains_abuse
 from message_model import notify_with_checkpoint
 from datetime import datetime
@@ -7,11 +6,11 @@ from datetime import datetime
 DB = 'opinion.db'
 
 def init_issues_table():
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS issues (
-              id SERIAL PRIMARY KEY,
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
               topic_id INTEGER NOT NULL,
               nickname TEXT NOT NULL,
               description TEXT NOT NULL,
@@ -22,11 +21,11 @@ def init_issues_table():
     conn.close()
 
 def init_votes_tables():
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS votes (
-              id SERIAL PRIMARY KEY,
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
               issue_id INTEGER NOT NULL,
               nickname TEXT NOT NULL,
               vote TEXT NOT NULL,
@@ -40,16 +39,16 @@ def add_issue(topic_id, nickname, description):
     if contains_abuse(description):
         return {'error': 'abusive_language'}
     
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
     c.execute(
-        'INSERT INTO issues (topic_id, nickname, description) VALUES (%s, %s, %s)',
+        'INSERT INTO issues (topic_id, nickname, description) VALUES (?, ?, ?)',
         (topic_id, nickname, description)
     )
     conn.commit()
     issue_id = c.lastrowid
 
-    c.execute('SELECT nickname FROM topics WHERE id=%s', (topic_id,))
+    c.execute('SELECT nickname FROM topics WHERE id=?', (topic_id,))
     owner_row = c.fetchone()
     owner_nickname = owner_row[0] if owner_row else None
     conn.close()
@@ -70,35 +69,35 @@ def add_issue(topic_id, nickname, description):
     return {'success': True}
 
 def get_issues(topic_id):
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
-    c.execute('SELECT * FROM issues WHERE topic_id = %s ORDER BY created_at ASC', (topic_id,))
+    c.execute('SELECT * FROM issues WHERE topic_id = ? ORDER BY created_at ASC', (topic_id,))
     issues = c.fetchall()
     conn.close()
     return issues
 
 def get_issue_by_id(issue_id):
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
-    c.execute('SELECT * FROM issues WHERE id = %s', (issue_id,))
+    c.execute('SELECT * FROM issues WHERE id = ?', (issue_id,))
     issue = c.fetchone()
     conn.close()
     return issue
 
 def delete_issue_db(issue_id, nickname):
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c =  conn.cursor()
-    c.execute('SELECT id FROM comments WHERE issue_id = %s', (issue_id,))
+    c.execute('SELECT id FROM comments WHERE issue_id = ?', (issue_id,))
     comment_ids = [row[0] for row in c.fetchall()]
 
     for cid in comment_ids:
-        c.execute('DELETE FROM replies WHERE comment_id = %s', (cid,))
+        c.execute('DELETE FROM replies WHERE comment_id = ?', (cid,))
 
-    c.execute('DELETE FROM comments WHERE issue_id = %s', (issue_id,))
+    c.execute('DELETE FROM comments WHERE issue_id = ?', (issue_id,))
 
-    c.execute('DELETE FROM issue_votes WHERE issue_id = %s', (issue_id,))
+    c.execute('DELETE FROM issue_votes WHERE issue_id = ?', (issue_id,))
 
-    c.execute('DELETE FROM issues WHERE id = %s AND nickname = %s', (issue_id, nickname))
+    c.execute('DELETE FROM issues WHERE id = ? AND nickname = ?', (issue_id, nickname))
 
     conn.commit()
     conn.close()
@@ -107,33 +106,33 @@ def update_issue(issue_id, nickname, new_description):
     if contains_abuse(new_description):
         return {'error': 'abusive_language'}
     
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
-    c.execute('SELECT id FROM issues WHERE id = %s AND nickname = %s', (issue_id, nickname))
+    c.execute('SELECT id FROM issues WHERE id = ? AND nickname = ?', (issue_id, nickname))
     owns = c.fetchone()
     if owns:
-        c.execute('UPDATE issues SET description = %s, edited = 1 WHERE id = %s AND nickname = %s',
+        c.execute('UPDATE issues SET description = ?, edited = 1 WHERE id = ? AND nickname = ?',
                   (new_description, issue_id, nickname))
         conn.commit()
     conn.close()
     return {'success': True}
 
 def add_vote(issue_id,  nickname, vote):
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     try:
         c = conn.cursor()
-        c.execute('SELECT vote FROM issue_votes WHERE issue_id = %s AND nickname = %s', (issue_id, nickname))
+        c.execute('SELECT vote FROM issue_votes WHERE issue_id = ? AND nickname = ?', (issue_id, nickname))
         existing = c.fetchone()
 
         if existing:
             if existing[0] == vote:
-                c.execute('DELETE FROM issue_votes WHERE issue_id = %s AND nickname = %s', (issue_id, nickname))
+                c.execute('DELETE FROM issue_votes WHERE issue_id = ? AND nickname = ?', (issue_id, nickname))
                 action = 'removed'
             else:
-                c.execute('UPDATE issue_votes SET vote = %s WHERE issue_id = %s AND nickname = %s', (vote, issue_id, nickname))
+                c.execute('UPDATE issue_votes SET vote = ? WHERE issue_id = ? AND nickname = ?', (vote, issue_id, nickname))
                 action = 'changed'
         else:
-            c.execute('INSERT INTO issue_votes (issue_id, nickname, vote) VALUES (%s, %s, %s)', (issue_id, nickname, vote))
+            c.execute('INSERT INTO issue_votes (issue_id, nickname, vote) VALUES (?, ?, ?)', (issue_id, nickname, vote))
             action = 'added'
     
         conn.commit()
@@ -142,32 +141,32 @@ def add_vote(issue_id,  nickname, vote):
         conn.close()
 
 def get_votes_for_issue(issue_id):
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
-    c.execute('SELECT COUNT(*) FROM issue_votes WHERE issue_id = %s', (issue_id,))
+    c.execute('SELECT COUNT(*) FROM issue_votes WHERE issue_id = ?', (issue_id,))
     total = c.fetchone()[0]
     conn.close()
     return {'total': total}
 
     
 def get_user_vote_for_issues(issue_id, nickname):
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
-    c.execute('SELECT vote FROM issue_votes WHERE issue_id = %s AND nickname = %s', (issue_id, nickname))
+    c.execute('SELECT vote FROM issue_votes WHERE issue_id = ? AND nickname = ?', (issue_id, nickname))
     row = c.fetchone()
     conn.close()
     return row
 
 def get_issue_retain_count(issue_id):
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
-    c.execute('SELECT retain_count FROM issues WHERE id=%s', (issue_id,))
+    c.execute('SELECT retain_count FROM issues WHERE id=?', (issue_id,))
     row = c.fetchone()
     conn.close()
     return row[0] if row else 0
 
 def get_top_conclusions_comments(issue_id, limit=10):
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
     c.execute('''
         SELECT c.id, c.nickname, c.comment, COUNT(cv.id) as conclusion_count,
@@ -176,11 +175,11 @@ def get_top_conclusions_comments(issue_id, limit=10):
         FROM comments c
         LEFT JOIN conclusion_votes cv ON cv.comment_id = c.id
         LEFT JOIN votes v ON v.comment_id = c.id
-        WHERE c.issue_id = %s
+        WHERE c.issue_id = ?
         GROUP BY c.id
-        HAVING conclusion_count > 0
+        HAVING COUNT(cv.id) > 0
         ORDER BY conclusion_count DESC, net_votes DESC
-        LIMIT %s
+        LIMIT ?
     ''', (issue_id, limit))
     rows = c.fetchall()
     conn.close()
@@ -190,7 +189,7 @@ def get_top_conclusions_comments(issue_id, limit=10):
     ]
 
 def get_issues_sorted_by_votes(topic_id):
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
     c.execute('''
         SELECT i.*,
@@ -198,7 +197,7 @@ def get_issues_sorted_by_votes(topic_id):
                COALESCE(SUM(CASE WHEN v.vote = 'downvote' THEN 1 ELSE 0 END), 0) AS net_votes
         FROM issues i
         LEFT JOIN issue_votes v ON v.issue_id = i.id
-        WHERE i.topic_id = %s
+        WHERE i.topic_id = ?
         GROUP BY i.id
         ORDER BY net_votes DESC, i.created_at ASC
     ''', (topic_id,))
@@ -214,7 +213,7 @@ def time_ago_issues(timestamp_str):
         created = timestamp_str
     else:
         try:
-            created = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S")
+            created = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:?")
         except ValueError:
             created = datetime.fromisoformat(timestamp_str)
 
@@ -236,25 +235,25 @@ def time_ago_issues(timestamp_str):
         return f"{days} days ago"
 
 def get_issue_owner(issue_id):
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
-    c.execute('SELECT nickname FROM issues WHERE id=%s', (issue_id,))
+    c.execute('SELECT nickname FROM issues WHERE id=?', (issue_id,))
     row = c.fetchone()
     conn.close()
     return row[0] if row else None
 
 def get_issue_topic_id(issue_id):
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
-    c.execute('SELECT topic_id FROM issues WHERE id=%s', (issue_id,))
+    c.execute('SELECT topic_id FROM issues WHERE id=?', (issue_id,))
     row = c.fetchone()
     conn.close()
     return row[0] if row else None
 
 def get_users_issues(nickname):
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
-    c.execute('SELECT id, topic_id, description, created_At FROM issues WHERE nickname = %s ORDER BY created_at DESC', (nickname,))
+    c.execute('SELECT id, topic_id, description, created_At FROM issues WHERE nickname = ? ORDER BY created_at DESC', (nickname,))
     issues = c.fetchall()
     conn.close()
     return issues

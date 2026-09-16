@@ -62,7 +62,14 @@ def vote_issue(topic_id, issue_id):
     if not session.get('nickname'):
         return redirect('/auth')
     
-    vote_val = int(request.form['vote'])
+    vote_str = request.form['vote']
+    if vote_str == 'upvote':
+        vote_val = 1
+    elif vote_str == 'downvote':
+        vote_val = -1
+    else:
+        return redirect('discuss/topic/' + str(topic_id)) 
+
     nickname = session['nickname']
     action = add_vote(issue_id, session['nickname'], vote_val)
 

@@ -1,5 +1,4 @@
-import psycopg2
-import os
+import sqlite3
 from issue_model import get_issues_sorted_by_votes, get_top_conclusions_comments
 from profanity_filter import contains_abuse
 from message_model import notify_with_checkpoint
@@ -8,11 +7,11 @@ from datetime import datetime
 DB = 'opinion.db'
 
 def init_topics_table():
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS topics (
-              id SERIAL PRIMARY KEY,
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
               nickname TEXT NOT NULL,
               title TEXT NOT NULL,
               description TEXT NOT NULL,
@@ -23,11 +22,11 @@ def init_topics_table():
     conn.close()
 
 def init_interactions_table():
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
     c.execute('''   
         CREATE TABLE IF NOT EXISTS user_interactions (
-            id SERIAL PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             nickname TEXT NOT NULL,
             topic_id INTEGER NOT NULL,
             action TEXT NOT NULL,
@@ -42,10 +41,10 @@ def add_topic(nickname, title, description):
     if contains_abuse(title) or contains_abuse(description):
         return {'error': 'abusive_language'}
     
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
     c.execute(
-        'INSERT INTO topics (nickname, title, description) VALUES (%s, %s, %s)',
+        'INSERT INTO topics (nickname, title, description) VALUES (?, ?, ?)',
         (nickname, title, description)
     )
     conn.commit()
@@ -53,7 +52,7 @@ def add_topic(nickname, title, description):
     return {'success': True}
 
 def get_all_topics():
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
     c.execute('SELECT * FROM topics ORDER BY created_at DESC')
     topics = c.fetchall()
@@ -61,17 +60,17 @@ def get_all_topics():
     return topics
 
 def get_topic_by_id(topic_id):
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
-    c.execute('SELECT * FROM topics WHERE id = %s', (topic_id,))
+    c.execute('SELECT * FROM topics WHERE id = ?', (topic_id,))
     topic = c.fetchone()
     conn.close()
     return topic
 
 def get_topic_retain_count(topic_id):
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
-    c.execute('SELECT retain_count FROM topics WHERE id=%s', (topic_id,))
+    c.execute('SELECT retain_count FROM topics WHERE id=?', (topic_id,))
     row = c.fetchone()
     conn.close()
     return row[0] if row else 0
@@ -90,9 +89,9 @@ def get_topic_conclusions(topic_id):
     return conclusions
 
 def get_topic_heat_count(topic_id):
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
-    c.execute('SELECT heat_count FROM topics WHERE id=%s', (topic_id,))
+    c.execute('SELECT heat_count FROM topics WHERE id=?', (topic_id,))
     row = c.fetchone()
     conn.close()
     return row[0] if row else 0
@@ -100,33 +99,33 @@ def get_topic_heat_count(topic_id):
 def has_user_heated(nickname, topic_id):
     if not nickname:
         return False
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
-    c.execute('SELECT 1 FROM topic_heats WHERE topic_id=%s AND nickname=%s', (topic_id, nickname))
+    c.execute('SELECT 1 FROM topic_heats WHERE topic_id=? AND nickname=?', (topic_id, nickname))
     row = c.fetchone()
     conn.close()
     return row is not None
 
 def toggle_topic_heat(nickname, topic_id):
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
-    c.execute('SELECT 1 FROM topic_heats WHERE topic_id=%s AND nickname=%s', (topic_id, nickname))
+    c.execute('SELECT 1 FROM topic_heats WHERE topic_id=? AND nickname=?', (topic_id, nickname))
     exists = c.fetchone()
 
     if exists:
-        c.execute('DELETE FROM topic_heats WHERE topic_id=%s AND nickname=%s', (topic_id, nickname))
-        c.execute('UPDATE topics SET heat_count = heat_count - 1 WHERE id=%s', (topic_id,))
+        c.execute('DELETE FROM topic_heats WHERE topic_id=? AND nickname=?', (topic_id, nickname))
+        c.execute('UPDATE topics SET heat_count = heat_count - 1 WHERE id=?', (topic_id,))
         heated = False
     else:
-        c.execute('INSERT INTO topic_heats (topic_id, nickname) VALUES (%s, %s)', (topic_id, nickname))
-        c.execute('UPDATE topics SET heat_count = heat_count + 1 WHERE id=%s', (topic_id,))
+        c.execute('INSERT INTO topic_heats (topic_id, nickname) VALUES (?, ?)', (topic_id, nickname))
+        c.execute('UPDATE topics SET heat_count = heat_count + 1 WHERE id=?', (topic_id,))
         heated = True
 
     conn.commit()
-    c.execute('SELECT heat_count FROM topics WHERE id=%s', (topic_id,))
+    c.execute('SELECT heat_count FROM topics WHERE id=?', (topic_id,))
     count = c.fetchone()[0]
 
-    c.execute('SELECT nickname FROM topics WHERE id=%s', (topic_id,))
+    c.execute('SELECT nickname FROM topics WHERE id=?', (topic_id,))
     owner_row = c.fetchone()
     owner_nickname = owner_row[0] if owner_row else None
     conn.close()
@@ -154,7 +153,7 @@ def time_ago(timestamp_str):
         created = timestamp_str
     else:
         try:
-            created = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S")
+            created = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:?")
         except ValueError:
             created = datetime.fromisoformat(timestamp_str)
             
@@ -176,9 +175,9 @@ def time_ago(timestamp_str):
         return f"{days} days ago"
 
 def record_interaction(nickname, topic_id, action, weight):
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
-    c.execute('INSERT INTO user_interactions (nickname, topic_id, action, weight) VALUES (%s, %s, %s, %s)',
+    c.execute('INSERT INTO user_interactions (nickname, topic_id, action, weight) VALUES (?, ?, ?, ?)',
               (nickname, topic_id, action, weight))
     conn.commit()
     conn.close()

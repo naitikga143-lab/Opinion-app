@@ -1,6 +1,7 @@
-import psycopg2
-import os
+import sqlite3
 from topic_model import DB, time_ago
+
+DB = 'opinion.db'
 
 VALID_PERIODS = ('day', 'month', 'year', 'all')
 
@@ -17,14 +18,14 @@ def _period_clause(period, column='created_at'):
 def get_most_heated_topics(limit=20, period='all'):
     """Topics created within `period`, sorted by heat_count (highest first)."""
     where = _period_clause(period, 't.created_at')
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
     c.execute(f'''
         SELECT id, nickname, title, description, created_at, heat_count
         FROM topics t
         {where}
         ORDER BY heat_count DESC, created_at DESC
-        LIMIT %s
+        LIMIT ?
     ''', (limit,))
     rows = c.fetchall()
     conn.close()
@@ -44,7 +45,7 @@ def get_most_heated_topics(limit=20, period='all'):
 def get_most_clicked_topics(limit=20, period='all'):
     """Topics created within `period`, sorted by number of 'click' interactions."""
     where = _period_clause(period, 't.created_at')
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
     c.execute(f'''
         SELECT t.id, t.nickname, t.title, t.description, t.created_at,
@@ -55,7 +56,7 @@ def get_most_clicked_topics(limit=20, period='all'):
         {where}
         GROUP BY t.id
         ORDER BY click_count DESC, t.created_at DESC
-        LIMIT %s
+        LIMIT ?
     ''', (limit,))
     rows = c.fetchall()
     conn.close()

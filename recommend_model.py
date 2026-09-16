@@ -1,5 +1,4 @@
-import psycopg2
-import os
+import sqlite3
 import re
 import random
 import math
@@ -20,14 +19,14 @@ def get_user_interest_profile(nickname, days=30):
     Zyada weight wale actions (comment, court_join) us topic ke keywords ko
     zyada importance denge.
     """
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
     since = (datetime.utcnow() - timedelta(days=days)).isoformat()
     c.execute('''
         SELECT t.title, t.description, ui.weight
         FROM user_interactions ui
         JOIN topics t ON t.id = ui.topic_id
-        WHERE ui.nickname = %s AND ui.created_at >= %s
+        WHERE ui.nickname = ? AND ui.created_at >= ?
     ''', (nickname, since))
     rows = c.fetchall()
     conn.close()
@@ -96,13 +95,13 @@ def _diversify(candidates, limit, max_per_keywords=2, window=4):
     
 def get_for_you_topics(nickname, limit=20, explore_ratio=0.25):
     print("CP1: function start")
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
     c.execute('SELECT id, nickname, title, description, created_at FROM topics ORDER BY created_at DESC LIMIT 500')
     all_topics = c.fetchall()
     print("CP2: all_topics fetched, count =", len(all_topics))
 
-    c.execute('SELECT DISTINCT topic_id FROM user_interactions WHERE nickname=%s AND action IN ("comment","conclusion_support")', (nickname,))
+    c.execute('SELECT DISTINCT topic_id FROM user_interactions WHERE nickname=? AND action IN ("comment","conclusion_support")', (nickname,))
     seen_deep = {r[0] for r in c.fetchall()}
     conn.close()
     print("CP3: seen_deep fetched, count =", len(seen_deep))

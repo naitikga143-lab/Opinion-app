@@ -1,10 +1,8 @@
-import psycopg2
-import os
-from dotenv import load_dotenv
+import sqlite3
 
-load_dotenv()
+DB = 'opinion.db'
 
-conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+conn = sqlite3.connect(DB)
 c = conn.cursor()
 c.execute("SELECT COUNT(*) FROM topics")
 print("Total topics:", c.fetchone())

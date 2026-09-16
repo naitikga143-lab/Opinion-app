@@ -1,10 +1,11 @@
-import psycopg2
-import os
+import sqlite3
 import bcrypt
+
+DB = 'opinion.db'
 
 
 def init_db():
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
 
     c.execute('''
@@ -29,8 +30,10 @@ def add_user(nickname, email, password):
         bcrypt.gensalt(rounds=12)
     )
 
+    
+
     try:
-        conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+        conn = sqlite3.connect(DB)
         c = conn.cursor()
 
         c.execute('SELECT COUNT(*) FROM users')
@@ -39,7 +42,7 @@ def add_user(nickname, email, password):
         user_id = f'{count:04d}'
 
         c.execute(
-            'INSERT INTO users (user_id, nickname, email, password) VALUES (%s, %s, %s, %s)',
+            'INSERT INTO users (user_id, nickname, email, password) VALUES (?, ?, ?, ?)',
             (user_id, nickname, email, hashed.decode('utf-8'))
         )
 
@@ -47,20 +50,20 @@ def add_user(nickname, email, password):
         conn.close()
         return True
     
-    except psycopg2.IntegrityError:
+    except sqlite3.IntegrityError:
         return False
     
 def get_user(email, password):
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
-
-    c.execute('SELECT * FROM users WHERE email = %s', (email,))
+     
+    c.execute('SELECT * FROM users WHERE email = ?', (email,))
     user = c.fetchone()
     conn.close()
 
     if user is None:
         return None
-
+    
     hashed = user[4]
     if isinstance(hashed, str):
         hashed = hashed.encode('utf-8')
@@ -70,17 +73,17 @@ def get_user(email, password):
     return None
 
 def search_user(nickname):
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
-    c.execute('SELECT nickname FROM users WHERE nickname = %s', (nickname,))
+    c.execute('SELECT nickname FROM users WHERE nickname = ?', (nickname,))
     user = c.fetchone()
     conn.close()
     return user
 
 def get_user_status(nickname):
-    conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
-    c.execute('SELECT banned FROM users WHERE nickname = %s', (nickname,))
+    c.execute('SELECT banned FROM users WHERE nickname = ?', (nickname,))
     user = c.fetchone()
     conn.close()
     return user[0] if user else 0
