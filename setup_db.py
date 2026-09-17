@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+from helper import get_db
+
 DB = 'opinion.db'
 
 def run_migration_step(conn, c, sql, params=None):
@@ -18,7 +20,7 @@ def run_migration_step(conn, c, sql, params=None):
         print(f"Migration step skipped/failed: {e}")
 
 def run_migrations():
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
 
     
@@ -74,7 +76,7 @@ def run_migrations():
     print("Setup complete")
 
 def init_issue_votes_table():
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS issue_votes (
