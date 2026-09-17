@@ -3,6 +3,8 @@ from profanity_filter import contains_abuse
 from message_model import notify_with_checkpoint
 from datetime import datetime
 
+from helper import get_db
+
 DB = 'opinion.db'
 
 def init_issues_table():

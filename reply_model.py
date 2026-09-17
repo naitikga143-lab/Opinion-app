@@ -4,9 +4,11 @@ from datetime import datetime
 
 DB = 'opinion.db'
 
+from helper import get_db
+
 
 def init_replies_table():
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS replies (
@@ -26,7 +28,7 @@ def add_reply(comment_id, nickname, reply_text, parent_reply_id=None):
     if contains_abuse(reply_text):
         return {'error': 'abusive_language'}
     
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute(
         '''INSERT INTO replies (comment_id, parent_reply_id, nickname, reply_text, created_at) VALUES (?, ?, ?, ?, datetime("now"))''',
@@ -38,7 +40,7 @@ def add_reply(comment_id, nickname, reply_text, parent_reply_id=None):
     return {'success': True, 'id': new_id}
 
 def get_replies(comment_id):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT * FROM replies WHERE comment_id = ? ORDER BY created_at ASC', (comment_id,))
     replies = c.fetchall()
@@ -46,7 +48,7 @@ def get_replies(comment_id):
     return replies
 
 def get_reply_count(comment_id):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT COUNT(*) FROM replies WHERE comment_id = ?', (comment_id,))
     count = c.fetchone()[0]
@@ -54,7 +56,7 @@ def get_reply_count(comment_id):
     return count
 
 def delete_reply(reply_id, nickname):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('DELETE FROM replies WHERE id = ? AND nickname = ?', (reply_id, nickname))
     conn.commit()
@@ -64,7 +66,7 @@ def update_reply(reply_id, nickname, new_text):
     if contains_abuse(new_text):
         return {'error': 'abusive_language'}
     
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT id FROM replies WHERE id = ? AND nickname = ?', (reply_id, nickname))
     owns = c.fetchone()
@@ -108,7 +110,7 @@ def vote_reply(reply_id, nickname, vote):
     if vote not in ('like', 'dislike'):
         return {'error': 'invalid_vote'}
 
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
 
     c.execute('SELECT vote FROM reply_votes WHERE reply_id = ? AND nickname = ?', (reply_id, nickname))
@@ -141,7 +143,7 @@ def vote_reply(reply_id, nickname, vote):
     return {'success': True, 'likes': likes, 'dislikes': dislikes, 'user_vote': new_user_vote}
 
 def get_user_votes_for_comment(comment_id, nickname):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('''  
         SELECT rv.reply_id, rv.vote FROM reply_votes rv
@@ -160,7 +162,7 @@ def sort_replies(replies_list):
     return replies_list
 
 def get_reply_owner(reply_id):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT nickname FROM replies WHERE id=?', (reply_id,))
     row = c.fetchone()
@@ -168,7 +170,7 @@ def get_reply_owner(reply_id):
     return row[0] if row else None
 
 def get_reply_meta(reply_id):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT nickname, comment_id FROM replies WHERE id=?', (reply_id,))
     row = c.fetchone()

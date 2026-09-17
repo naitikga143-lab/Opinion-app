@@ -3,10 +3,12 @@ from admin_model import retain_court_entry
 from datetime import datetime, timedelta
 from message_model import add_notification
 
+from helper import get_db
+
 DB = 'opinion.db'
 
 def init_court_table():
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS court_entries (
@@ -24,7 +26,7 @@ def init_court_table():
     conn.close()
 
 def is_already_reported(item_type, item_id):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT id FROM court_entries WHERE item_type=? AND item_id=?', (item_type, item_id))
     result = c.fetchone()
@@ -32,7 +34,7 @@ def is_already_reported(item_type, item_id):
     return result is not None
 
 def add_court_entry(item_type, item_id, category, content, posted_by, reported_by):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute(
         'INSERT INTO court_entries (item_type, item_id, category, content, posted_by, reported_by) VALUES (?, ?, ?, ?, ?, ?)',
@@ -44,7 +46,7 @@ def add_court_entry(item_type, item_id, category, content, posted_by, reported_b
     return entry_id
 
 def get_court_entries(category):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT * FROM court_entries WHERE category=? ORDER BY created_at DESC', (category,))
     entries = c.fetchall()
@@ -52,7 +54,7 @@ def get_court_entries(category):
     return entries
 
 def add_vote(entry_id, nickname, vote_type): 
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
 
     c.execute('SELECT 1 FROM court_delete_votes WHERE entry_id=? AND nickname=?', (entry_id, nickname))
@@ -70,7 +72,7 @@ def add_vote(entry_id, nickname, vote_type):
     return True
 
 def has_user_voted(entry_id, nickname): 
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT 1 FROM court_delete_votes WHERE entry_id=? AND nickname=?', (entry_id, nickname))
     row = c.fetchone()
@@ -78,7 +80,7 @@ def has_user_voted(entry_id, nickname):
     return row is not None
 
 def init_court_reasons_table():     #
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS court_reasons (
@@ -92,7 +94,7 @@ def init_court_reasons_table():     #
     conn.close()
 
 def init_court_delete_votes_table():
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS court_delete_votes (
@@ -106,7 +108,7 @@ def init_court_delete_votes_table():
     conn.close()
 
 def get_court_reasons(entry_id, nickname=None): 
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT reason1, reason1_by, reason1_upvotes, reason2, reason2_by, reason2_upvotes, reason3, reason3_by, reason3_upvotes FROM court_reasons WHERE entry_id=?', (entry_id,))
     row = c.fetchone()
@@ -126,7 +128,7 @@ def get_court_reasons(entry_id, nickname=None):
     return result
 
 def fill_court_reason_slot(entry_id, slot_num, text, submitted_by): #
-    conn = sqlite3.connect(DB) 
+    conn = get_db() 
     c = conn.cursor()
 
     c.execute('SELECT reason1, reason2, reason3 FROM court_reasons WHERE entry_id=?', (entry_id,))
@@ -148,7 +150,7 @@ def fill_court_reason_slot(entry_id, slot_num, text, submitted_by): #
     return True
 
 def get_court_entries_with_vote(category): #
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('''
         SELECT id, item_type, item_id, content, posted_by, reported_by, created_at, category, delete_votes
@@ -159,7 +161,7 @@ def get_court_entries_with_vote(category): #
     return entries
 
 def init_court_setting_table():
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('CREATE TABLE IF NOT EXISTS court_settings (key TEXT PRIMARY KEY, value TEXT)')
     c.execute("""
@@ -171,7 +173,7 @@ def init_court_setting_table():
     conn.close()
 
 def get_delete_vote_threshold():
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute("SELECT value FROM court_settings WHERE key='delete_vote_threshold'")
     row = c.fetchone()
@@ -179,14 +181,14 @@ def get_delete_vote_threshold():
     return int(row[0]) if row else 50
 
 def set_delete_vote_threshold(value):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute("UPDATE court_settings SET value=? WHERE key='delete_vote_threshold'", (str(value),))
     conn.commit()
     conn.close()
 
 def init_notifications_table():
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS notifications (
@@ -230,7 +232,7 @@ def build_reasons_text_from_row(row):
     return "\n\nAapka card delete karne ka reason, jo users ne diya hai:\n" + "\n".join(lines)
 
 def get_notifications(nickname):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT id message, created_at, is_read FROM notifications WHERE nickname=? AND is_read=0 ORDER BY created_at DESC', (nickname,))
     rows = c.fetchall()
@@ -238,7 +240,7 @@ def get_notifications(nickname):
     return rows
 
 def count_filled_reasons(entry_id): #
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT reason1, reason2, reason3 FROM court_reasons WHERE entry_id=?', (entry_id,))
     row = c.fetchone()
@@ -248,7 +250,7 @@ def count_filled_reasons(entry_id): #
     return sum(1 for r in row if r)
 
 def auto_delete_if_threshold_met(entry_id):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT item_type, item_id, posted_by, delete_votes FROM court_entries WHERE id=?', (entry_id,))
     row = c.fetchone()
@@ -272,7 +274,7 @@ def auto_delete_if_threshold_met(entry_id):
 
     
 def _perform_court_auto_delete(entry_id, item_type, item_id, posted_by):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
 
     c.execute('SELECT reason1, reason1_by, reason2, reason2_by, reason3, reason3_by FROM court_reasons WHERE entry_id=?', (entry_id,))
@@ -304,7 +306,7 @@ def _perform_court_auto_delete(entry_id, item_type, item_id, posted_by):
         add_notification(posted_by, build_message('auto_delete', item_type, reasons_text))
 
 def mark_notifications_read(nickname):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     now = datetime.now().strftime('%Y-%m-%d %H:%M:?')
     c.execute('UPDATE notifications SET is_read=1, read_at=? WHERE nickname=? AND is_read=0', (now, nickname,))
@@ -312,7 +314,7 @@ def mark_notifications_read(nickname):
     conn.close()
 
 def get_setting(key, default):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT value FROM court_settings WHERE key=?', (key,))
     row = c.fetchone()
@@ -320,14 +322,14 @@ def get_setting(key, default):
     return int(row[0]) if row else default
 
 def set_setting(key, value):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('INSERT OR REPLACE INTO court_settings (key, value) VALUES (?, ?)', (key, str(value)))
     conn.commit()
     conn.close()
 
 def auto_retain_expired_entries():
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT id, item_type, item_id, created_at FROM court_entries')
     entries = c.fetchall()
@@ -344,7 +346,7 @@ def auto_retain_expired_entries():
             retain_court_entry(entry_id, item_type, item_id)
 
 def get_all_notifications(nickname):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
 
     cutoff = datetime.now() - timedelta(days=3)
@@ -362,7 +364,7 @@ def get_all_notifications(nickname):
     return rows
 
 def has_user_submitted_reason(entry_id, nickname):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT reason1_by, reason2_by, reason3_by FROM court_reasons WHERE entry_id=?', (entry_id,))
     row = c.fetchone()
@@ -372,7 +374,7 @@ def has_user_submitted_reason(entry_id, nickname):
     return nickname in row
 
 def has_user_upvoted_reason(entry_id, slot_num, nickname):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT 1 FROM court_reason_upvotes WHERE entry_id=? AND slot_num=? AND nickname=?', (entry_id, slot_num, nickname))
     row = c.fetchone()
@@ -380,7 +382,7 @@ def has_user_upvoted_reason(entry_id, slot_num, nickname):
     return row is not None
 
 def add_reason_upvote(entry_id, slot_num, nickname):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
 
     c.execute('SELECT 1 FROM court_reason_upvotes WHERE entry_id=? AND slot_num=? AND nickname=?', (entry_id, slot_num, nickname))
@@ -398,7 +400,7 @@ def add_reason_upvote(entry_id, slot_num, nickname):
     return True
 
 def get_justification(entry_id, nickname):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT posted_by, justification FROM court_entries WHERE id=?', (entry_id,))
     row = c.fetchone()
@@ -409,7 +411,7 @@ def get_justification(entry_id, nickname):
     return {'justification': justification, 'is_owner': (nickname == posted_by) if nickname else False}
 
 def set_justification(entry_id, nickname, text):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT posted_by FROM court_entries WHERE id=?', (entry_id,))
     row = c.fetchone()

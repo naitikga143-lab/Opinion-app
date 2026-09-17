@@ -1,10 +1,12 @@
 import sqlite3
 from datetime import datetime
 
+from helper import get_db
+
 DB = 'opinion.db'
 
 def init_message_tables():
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
 
     c.execute('''
@@ -41,7 +43,7 @@ def init_message_tables():
     conn.close()
 
 def add_notification(nickname, message, link=None):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     now = datetime.now()
     c.execute('INSERT INTO notifications (nickname, message, link, created_at) VALUES (?, ?, ?, ?)', (nickname, message, link, now))
@@ -49,7 +51,7 @@ def add_notification(nickname, message, link=None):
     conn.close()
 
 def get_all_notifications(nickname):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT id, message, created_at, is_read, link FROM notifications WHERE nickname=? ORDER BY created_at DESC', (nickname,))
     rows = c.fetchall()
@@ -57,7 +59,7 @@ def get_all_notifications(nickname):
     return rows
 
 def get_unread_count(nickname):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT COUNT(*) FROM notifications WHERE nickname=? AND is_read=0', (nickname,))
     count = c.fetchone()[0]
@@ -65,7 +67,7 @@ def get_unread_count(nickname):
     return count
 
 def mark_all_read(nickname):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     now = datetime.now().strftime('%Y-%m-%d %H:%M:?')
     c.execute('UPDATE notifications SET is_read=1, read_at=? WHERE nickname=? AND is_read=0', (now,nickname))
@@ -73,7 +75,7 @@ def mark_all_read(nickname):
     conn.close()
 
 def notify_with_checkpoint(nickname, entity_type, entity_id, message, link=None, window_days=3):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     now = datetime.now()
 
@@ -113,14 +115,14 @@ def notify_with_checkpoint(nickname, entity_type, entity_id, message, link=None,
     conn.close()
 
 def delete_notification(notif_id, nickname):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('DELETE FROM notifications WHERE id=? AND nickname=?', (notif_id, nickname))
     conn.commit()
     conn.close()
 
 def delete_all_notifications(nickname):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('DELETE FROM notifications WHERE nickname=?', (nickname,))
     conn.commit()

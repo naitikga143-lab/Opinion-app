@@ -3,9 +3,11 @@ import bcrypt
 
 DB = 'opinion.db'
 
+from helper import get_db
+
 
 def init_db():
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
 
     c.execute('''
@@ -33,7 +35,7 @@ def add_user(nickname, email, password):
     
 
     try:
-        conn = sqlite3.connect(DB)
+        conn = get_db()
         c = conn.cursor()
 
         c.execute('SELECT COUNT(*) FROM users')
@@ -54,7 +56,7 @@ def add_user(nickname, email, password):
         return False
     
 def get_user(email, password):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
      
     c.execute('SELECT * FROM users WHERE email = ?', (email,))
@@ -73,7 +75,7 @@ def get_user(email, password):
     return None
 
 def search_user(nickname):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT nickname FROM users WHERE nickname = ?', (nickname,))
     user = c.fetchone()
@@ -81,7 +83,7 @@ def search_user(nickname):
     return user
 
 def get_user_status(nickname):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT banned FROM users WHERE nickname = ?', (nickname,))
     user = c.fetchone()

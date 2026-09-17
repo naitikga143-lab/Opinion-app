@@ -3,6 +3,8 @@ from topic_model import DB, time_ago
 
 DB = 'opinion.db'
 
+from helper import get_db
+
 VALID_PERIODS = ('day', 'month', 'year', 'all')
 
 def _period_clause(period, column='created_at'):
@@ -18,7 +20,7 @@ def _period_clause(period, column='created_at'):
 def get_most_heated_topics(limit=20, period='all'):
     """Topics created within `period`, sorted by heat_count (highest first)."""
     where = _period_clause(period, 't.created_at')
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute(f'''
         SELECT id, nickname, title, description, created_at, heat_count
@@ -45,7 +47,7 @@ def get_most_heated_topics(limit=20, period='all'):
 def get_most_clicked_topics(limit=20, period='all'):
     """Topics created within `period`, sorted by number of 'click' interactions."""
     where = _period_clause(period, 't.created_at')
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute(f'''
         SELECT t.id, t.nickname, t.title, t.description, t.created_at,

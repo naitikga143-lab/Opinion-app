@@ -2,10 +2,12 @@ import sqlite3
 import datetime
 from message_model import add_notification
 
+from helper import get_db
+
 DB = 'opinion.db'
 
 def init_follows_table():
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS follows (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -18,7 +20,7 @@ def init_follows_table():
     conn.close()
 
 def get_users_topics(nickname):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT * FROM topics WHERE nickname = ? ORDER BY created_at DESC', (nickname,))
     topics = c.fetchall()
@@ -26,7 +28,7 @@ def get_users_topics(nickname):
     return topics
 
 def delete_topic(topic_id, nickname):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT nickname, created_at FROM topics WHERE id = ?', (topic_id,))
     topic = c.fetchone()
@@ -48,28 +50,28 @@ def delete_topic(topic_id, nickname):
 def follow_user(follower, following):
     if follower == following:
         return False
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     try:
         c.execute('INSERT INTO follows (follower, following) VALUES (?, ?)', (follower, following))
         conn.commit()
         add_notification(following, f"{follower} is now following you", link=f"/profile/{follower}")
         return True
-    except psycopg2.errors.UniqueViolation:
+    except sqlite3.IntegrityError:
         conn.rollback()
         return False
     finally:
         conn.close()
 
 def unfollow_user(follower, following):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('DELETE FROM follows WHERE follower = ? AND following = ?',(follower, following))
     conn.commit()
     conn.close()
 
 def is_following(follower, following):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT 1 FROM follows WHERE follower = ? AND following = ?', (follower, following))
     result = c.fetchone()
@@ -77,7 +79,7 @@ def is_following(follower, following):
     return result is not None
 
 def get_following_list(nickname):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT following FROM follows WHERE follower = ?', (nickname,))
     result = [row[0] for row in c.fetchall()]
@@ -85,7 +87,7 @@ def get_following_list(nickname):
     return result
 
 def get_followers_count(nickname):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT COUNT(*) FROM follows WHERE following = ?', (nickname,))
     count = c.fetchone()[0]
@@ -93,7 +95,7 @@ def get_followers_count(nickname):
     return count
 
 def get_following_count(nickname):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT COUNT(*) FROM follows WHERE follower = ?', (nickname,))
     count = c.fetchone()[0]
@@ -101,7 +103,7 @@ def get_following_count(nickname):
     return count
 
 def get_followers_list(nickname):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT follower FROM follows WHERE following = ?', (nickname,))
     result = [row[0] for row in c.fetchall()]

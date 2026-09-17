@@ -49,7 +49,7 @@ def login():
         return redirect('/')
     else:
         return render_template('auth.html',
-            error="Aapka apply kiya hua email exist ya password galat hai")
+            error="Aapka apply kiya hua email exist nahi karta ya password galat hai")
     
 @auth_bp.route('/logout')
 def logout():

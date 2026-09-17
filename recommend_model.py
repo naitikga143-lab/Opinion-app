@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 from collections import Counter
 from topic_model import get_topic_heat_count, has_user_heated, time_ago
 
+from helper import get_db
+
 DB = 'opinion.db'
 STOPWORDS = {'the', 'is', 'a', 'an', 'of', 'to', 'and', 'in', 'on', 'for', 'with', 'this', 'that', 'ka', 'ki', 'hai', 'ko'}
 
@@ -19,7 +21,7 @@ def get_user_interest_profile(nickname, days=30):
     Zyada weight wale actions (comment, court_join) us topic ke keywords ko
     zyada importance denge.
     """
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     since = (datetime.utcnow() - timedelta(days=days)).isoformat()
     c.execute('''
@@ -95,7 +97,7 @@ def _diversify(candidates, limit, max_per_keywords=2, window=4):
     
 def get_for_you_topics(nickname, limit=20, explore_ratio=0.25):
     print("CP1: function start")
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT id, nickname, title, description, created_at FROM topics ORDER BY created_at DESC LIMIT 500')
     all_topics = c.fetchall()

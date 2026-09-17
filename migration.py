@@ -2,11 +2,13 @@ import sqlite3
 import os
 from dotenv import load_dotenv
 
+from helper import get_db
+
 load_dotenv()
 
 DB = 'opinion.db'
 
-conn = sqlite3.connect(DB)
+conn = get_db()
 c = conn.cursor()
 
 for col in ['reason1_upvotes', 'reason2_upvotes', 'reason3_upvotes']:

@@ -1,8 +1,10 @@
 import sqlite3
 
+from helper import get_db
+
 DB = 'opinion.db'
 
-conn = sqlite3.connect(DB)
+conn = get_db()
 
 c = conn.cursor()
 

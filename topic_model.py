@@ -4,10 +4,12 @@ from profanity_filter import contains_abuse
 from message_model import notify_with_checkpoint
 from datetime import datetime
 
+from helper import get_db
+
 DB = 'opinion.db'
 
 def init_topics_table():
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS topics (
@@ -22,7 +24,7 @@ def init_topics_table():
     conn.close()
 
 def init_interactions_table():
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('''   
         CREATE TABLE IF NOT EXISTS user_interactions (
@@ -41,7 +43,7 @@ def add_topic(nickname, title, description):
     if contains_abuse(title) or contains_abuse(description):
         return {'error': 'abusive_language'}
     
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute(
         'INSERT INTO topics (nickname, title, description) VALUES (?, ?, ?)',
@@ -52,7 +54,7 @@ def add_topic(nickname, title, description):
     return {'success': True}
 
 def get_all_topics():
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT * FROM topics ORDER BY created_at DESC')
     topics = c.fetchall()
@@ -60,7 +62,7 @@ def get_all_topics():
     return topics
 
 def get_topic_by_id(topic_id):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT * FROM topics WHERE id = ?', (topic_id,))
     topic = c.fetchone()
@@ -68,7 +70,7 @@ def get_topic_by_id(topic_id):
     return topic
 
 def get_topic_retain_count(topic_id):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT retain_count FROM topics WHERE id=?', (topic_id,))
     row = c.fetchone()
@@ -89,7 +91,7 @@ def get_topic_conclusions(topic_id):
     return conclusions
 
 def get_topic_heat_count(topic_id):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT heat_count FROM topics WHERE id=?', (topic_id,))
     row = c.fetchone()
@@ -99,7 +101,7 @@ def get_topic_heat_count(topic_id):
 def has_user_heated(nickname, topic_id):
     if not nickname:
         return False
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT 1 FROM topic_heats WHERE topic_id=? AND nickname=?', (topic_id, nickname))
     row = c.fetchone()
@@ -107,7 +109,7 @@ def has_user_heated(nickname, topic_id):
     return row is not None
 
 def toggle_topic_heat(nickname, topic_id):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT 1 FROM topic_heats WHERE topic_id=? AND nickname=?', (topic_id, nickname))
     exists = c.fetchone()
@@ -175,7 +177,7 @@ def time_ago(timestamp_str):
         return f"{days} days ago"
 
 def record_interaction(nickname, topic_id, action, weight):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('INSERT INTO user_interactions (nickname, topic_id, action, weight) VALUES (?, ?, ?, ?)',
               (nickname, topic_id, action, weight))

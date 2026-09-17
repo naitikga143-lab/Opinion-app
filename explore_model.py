@@ -1,6 +1,8 @@
 import sqlite3
 import re
 
+from helper import get_db
+
 DB = 'opinion.db'
 
 def search_topics(query):
@@ -13,7 +15,7 @@ def search_topics(query):
     if not query:
         return get_all_topics_for_explore()
 
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT * FROM topics ORDER BY created_at DESC')
     all_topics = c.fetchall()
@@ -30,7 +32,7 @@ def search_topics(query):
     return matched
 
 def get_all_topics_for_explore():
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT * FROM topics ORDER BY created_at DESC')
     topics = c.fetchall()

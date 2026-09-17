@@ -2,10 +2,12 @@ import sqlite3
 from profanity_filter import contains_abuse
 from datetime import datetime
 
+from helper import get_db
+
 DB = 'opinion.db'
 
 def init_comments_table():
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS comments (
@@ -41,7 +43,7 @@ def add_comment(issue_id, topic_id, nickname, comment):
     if contains_abuse(comment):
         return {'error': 'abusive_language'}
     
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute(
         'INSERT INTO comments (issue_id, topic_id, nickname, comment) VALUES (?, ?, ?, ?)',
@@ -53,7 +55,7 @@ def add_comment(issue_id, topic_id, nickname, comment):
     return {'success': True, 'comment_id': comment_id}
 
 def get_comments(issue_id):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('''
         SELECT c.*,
@@ -69,7 +71,7 @@ def get_comments(issue_id):
     return comments
 
 def get_comments_by_id(comment_id):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
     c.execute('SELECT * FROM comments WHERE id = ?', (comment_id,))
@@ -81,7 +83,7 @@ def update_comment(comment_id, nickname, new_comment):
     if contains_abuse(new_comment):
         return {'error': 'abusive_language'}
     
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT id FROM comments WHERE id = ? AND nickname = ?', (comment_id, nickname))
     owns = c.fetchone()
@@ -93,7 +95,7 @@ def update_comment(comment_id, nickname, new_comment):
     return {'success': True}
 
 def delete_comment(comment_id, nickname):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT id FROM comments WHERE id = ? AND nickname = ?', (comment_id, nickname))
     owns_comment = c.fetchone()
@@ -106,7 +108,7 @@ def delete_comment(comment_id, nickname):
     conn.close()
 
 def toggle_vote(comment_id, nickname, vote):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT vote FROM votes WHERE comment_id = ? AND nickname = ?', (comment_id, nickname))
     existing = c.fetchone()
@@ -129,7 +131,7 @@ def toggle_vote(comment_id, nickname, vote):
     return new_user_vote, action
 
 def get_votes(comment_id):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT vote FROM votes WHERE comment_id = ?', (comment_id,))
     votes = c.fetchall()
@@ -139,7 +141,7 @@ def get_votes(comment_id):
     return likes, dislikes
 
 def get_user_vote(comment_id, nickname):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT vote FROM votes WHERE comment_id = ? AND nickname = ?', (comment_id, nickname))
     vote = c.fetchone()
@@ -147,7 +149,7 @@ def get_user_vote(comment_id, nickname):
     return int(vote[0]) if vote else 0
 
 def get_comment_retain_count(comment_id):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT retain_count FROM comments WHERE id=?', (comment_id,))
     row = c.fetchone()
@@ -155,7 +157,7 @@ def get_comment_retain_count(comment_id):
     return row[0] if row else 0
 
 def toggle_conclusion_vote(comment_id, nickname):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT 1 FROM conclusion_votes WHERE comment_id=? AND nickname=?', (comment_id, nickname))
     existing = c.fetchone()
@@ -172,7 +174,7 @@ def toggle_conclusion_vote(comment_id, nickname):
     return new_state
 
 def get_conclusion_count(comment_id):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT COUNT(*) FROM conclusion_votes WHERE comment_id=?', (comment_id,))
     count = c.fetchone()[0]
@@ -180,7 +182,7 @@ def get_conclusion_count(comment_id):
     return count
 
 def has_supported_conclusion(comment_id, nickname):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT 1 FROM conclusion_votes WHERE comment_id=? AND nickname=?', (comment_id, nickname))
     row = c.fetchone()
@@ -188,7 +190,7 @@ def has_supported_conclusion(comment_id, nickname):
     return row is not None
 
 def toggle_replies(comment_id, nickname):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT id, replies_enabled FROM comments WHERE id = ? AND nickname = ?', (comment_id, nickname))
     row = c.fetchone()
@@ -237,7 +239,7 @@ def time_ago_comments(timestamp_str):
         return f"{days} days ago"
 
 def get_comment_owner(comment_id):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT nickname FROM comments WHERE id=?', (comment_id,))
     row = c.fetchone()
