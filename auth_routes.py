@@ -9,7 +9,7 @@ def auth():
     return render_template('auth.html')
 
 @auth_bp.route('/signup', methods=['POST'])
-@limiter.limit("5 per hour")
+@limiter.limit("30 per 15 minute")
 def signup():
     nickname = request.form['nickname'].strip()
     email = request.form['email'].strip().lower()
@@ -38,7 +38,7 @@ def signup():
             error="aapka apply kia hua nickname ya email pehle se exist karta hai!")
     
 @auth_bp.route('/login', methods=['POST'])
-@limiter.limit("5 per 15 minute")
+@limiter.limit("30 per 15 minute")
 def login():
     email = request.form['email'].strip().lower()
     password = request.form['password']
