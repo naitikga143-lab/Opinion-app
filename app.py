@@ -29,6 +29,7 @@ from message_model import init_message_tables, get_unread_count
 from message_routes import message_bp
 from explore_routes import explore_bp
 import os
+from datetime import timedelta
 
 load_dotenv()
 
@@ -50,9 +51,10 @@ app.jinja_env.globals.update(time_ago_replies=time_ago_replies)
 
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SECURE=False,
+    SESSION_COOKIE_SECURE=True,
     SESSION_COOKIE_SAMESITE='LAX',
-    WTF_CSRF_TIME_LIMIT = 86400
+    WTF_CSRF_TIME_LIMIT = 86400,
+    PERMANENT_SESSION_LIFETIME=timedelta(days=30)
 )
 
 crsf = CSRFProtect(app)

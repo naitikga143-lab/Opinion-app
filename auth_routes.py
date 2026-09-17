@@ -30,6 +30,7 @@ def signup():
     success = add_user(nickname, email, password)
 
     if success:
+        session.permanent = True
         session['nickname'] = nickname
         return redirect('/')
     else:
@@ -45,6 +46,7 @@ def login():
     user = get_user(email, password)
 
     if user:
+        session.permanent = True
         session['nickname'] = user[2]
         return redirect('/')
     else:
