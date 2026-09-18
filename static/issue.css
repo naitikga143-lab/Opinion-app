@@ -459,6 +459,8 @@
     .btn-reply,
     .btn-reply-disabled { flex: 0 0 auto; width: auto; padding: 0.35rem 0.8rem; font-size: 0.72rem; }
 
+    .reply-toggle-switch { flex-shrink: 0; width: 36px; height: 20px; margin: 0; }
+
     .vote-btn { padding: 0.3rem 0.6rem; font-size: 0.76rem; }
 
     .conclusion-btn { font-size: 0.75rem; padding: 0.45rem 0.5rem; }

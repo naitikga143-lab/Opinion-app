@@ -8,7 +8,7 @@ from helper import get_db
 DB = 'opinion.db'
 
 def init_issues_table():
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS issues (
@@ -23,7 +23,7 @@ def init_issues_table():
     conn.close()
 
 def init_votes_tables():
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS votes (
@@ -41,7 +41,7 @@ def add_issue(topic_id, nickname, description):
     if contains_abuse(description):
         return {'error': 'abusive_language'}
     
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute(
         'INSERT INTO issues (topic_id, nickname, description) VALUES (?, ?, ?)',
@@ -71,7 +71,7 @@ def add_issue(topic_id, nickname, description):
     return {'success': True}
 
 def get_issues(topic_id):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT * FROM issues WHERE topic_id = ? ORDER BY created_at ASC', (topic_id,))
     issues = c.fetchall()
@@ -79,7 +79,7 @@ def get_issues(topic_id):
     return issues
 
 def get_issue_by_id(issue_id):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT * FROM issues WHERE id = ?', (issue_id,))
     issue = c.fetchone()
@@ -87,7 +87,7 @@ def get_issue_by_id(issue_id):
     return issue
 
 def delete_issue_db(issue_id, nickname):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c =  conn.cursor()
     c.execute('SELECT id FROM comments WHERE issue_id = ?', (issue_id,))
     comment_ids = [row[0] for row in c.fetchall()]
@@ -108,7 +108,7 @@ def update_issue(issue_id, nickname, new_description):
     if contains_abuse(new_description):
         return {'error': 'abusive_language'}
     
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT id FROM issues WHERE id = ? AND nickname = ?', (issue_id, nickname))
     owns = c.fetchone()
@@ -120,7 +120,7 @@ def update_issue(issue_id, nickname, new_description):
     return {'success': True}
 
 def add_vote(issue_id,  nickname, vote):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     try:
         c = conn.cursor()
         c.execute('SELECT vote FROM issue_votes WHERE issue_id = ? AND nickname = ?', (issue_id, nickname))
@@ -143,7 +143,7 @@ def add_vote(issue_id,  nickname, vote):
         conn.close()
 
 def get_votes_for_issue(issue_id):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT COUNT(*) FROM issue_votes WHERE issue_id = ?', (issue_id,))
     total = c.fetchone()[0]
@@ -152,7 +152,7 @@ def get_votes_for_issue(issue_id):
 
     
 def get_user_vote_for_issues(issue_id, nickname):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT vote FROM issue_votes WHERE issue_id = ? AND nickname = ?', (issue_id, nickname))
     row = c.fetchone()
@@ -160,7 +160,7 @@ def get_user_vote_for_issues(issue_id, nickname):
     return row
 
 def get_issue_retain_count(issue_id):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT retain_count FROM issues WHERE id=?', (issue_id,))
     row = c.fetchone()
@@ -168,7 +168,7 @@ def get_issue_retain_count(issue_id):
     return row[0] if row else 0
 
 def get_top_conclusions_comments(issue_id, limit=10):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('''
         SELECT c.id, c.nickname, c.comment, COUNT(cv.id) as conclusion_count,
@@ -191,7 +191,7 @@ def get_top_conclusions_comments(issue_id, limit=10):
     ]
 
 def get_issues_sorted_by_votes(topic_id):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('''
         SELECT i.*,
@@ -237,7 +237,7 @@ def time_ago_issues(timestamp_str):
         return f"{days} days ago"
 
 def get_issue_owner(issue_id):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT nickname FROM issues WHERE id=?', (issue_id,))
     row = c.fetchone()
@@ -245,7 +245,7 @@ def get_issue_owner(issue_id):
     return row[0] if row else None
 
 def get_issue_topic_id(issue_id):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT topic_id FROM issues WHERE id=?', (issue_id,))
     row = c.fetchone()
@@ -253,7 +253,7 @@ def get_issue_topic_id(issue_id):
     return row[0] if row else None
 
 def get_users_issues(nickname):
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
     c.execute('SELECT id, topic_id, description, created_At FROM issues WHERE nickname = ? ORDER BY created_at DESC', (nickname,))
     issues = c.fetchall()

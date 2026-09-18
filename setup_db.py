@@ -2,6 +2,8 @@ import sqlite3
 import os
 from dotenv import load_dotenv
 
+#dont change anything
+
 load_dotenv()
 
 from helper import get_db
@@ -19,12 +21,13 @@ def run_migration_step(conn, c, sql, params=None):
         conn.rollback()
         print(f"Migration step skipped/failed: {e}")
 
+
 def run_migrations():
     conn = get_db()
     c = conn.cursor()
 
     
-    run_migration_step(conn, c, 'ALTER TABLE comments ADD COLUMN replies_enabled INTEGER DEFAULT 0')
+    run_migration_step(conn, c, 'ALTER TABLE comments ADD COLUMN replies_enabled INTEGER DEFAULT 1')
 
     run_migration_step(conn, c, 'ALTER TABLE topics ADD COLUMN retain_count INTEGER DEFAULT 0')
 
@@ -71,6 +74,8 @@ def run_migrations():
                 UNIQUE(reply_id, nickname)
             )
         ''')
+
+    run_migration_step(conn, c, 'UPDATE comments SET replies_enabled = 1')
 
     conn.close()
     print("Setup complete")

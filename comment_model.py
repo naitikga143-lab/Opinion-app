@@ -46,7 +46,7 @@ def add_comment(issue_id, topic_id, nickname, comment):
     conn = get_db()
     c = conn.cursor()
     c.execute(
-        'INSERT INTO comments (issue_id, topic_id, nickname, comment) VALUES (?, ?, ?, ?)',
+        'INSERT INTO comments (issue_id, topic_id, nickname, comment, replies_enabled) VALUES (?, ?, ?, ?, 1)',
         (issue_id, topic_id, nickname, comment)
     )
     conn.commit()
