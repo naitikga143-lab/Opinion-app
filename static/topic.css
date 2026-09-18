@@ -71,14 +71,14 @@
     scroll-margin-top: 90px;
     position: relative;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     background: var(--black);
     border: 1px solid var(--gray);
     border-radius: 10px;
     padding: 1.2rem 1.4rem;
     display: flex;
     gap: 1rem;
-    flex-direction: column;
+    flex-direction: row;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     transition: border-color 0.2s ease;
 }
@@ -393,12 +393,6 @@
   .issue-card { padding: 1rem 1.1rem; }
 
   .btn-report {
-    position: absolute;
-    top: 0.7rem;
-    right: 0.7rem;
-    left: auto;
-    bottom: auto;
-    width: auto;
     max-width: max-content;
     font-size: 0.62rem;
     padding: 0.22rem 0.55rem;
@@ -438,12 +432,6 @@
   }
 
   .btn-report {
-    position: absolute;
-    top: 0.7rem;
-    right: 0.7rem;
-    left: auto;
-    bottom: auto;
-    width: auto;
     max-width: max-content;
     font-size: 0.62rem;
     padding: 0.22rem 0.55rem;
