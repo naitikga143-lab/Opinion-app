@@ -71,7 +71,7 @@
     scroll-margin-top: 90px;
     position: relative;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     background: var(--black);
     border: 1px solid var(--gray);
     border-radius: 10px;
