@@ -426,7 +426,7 @@
        text-align: center;
    }
 
-   .reply-link-wrap { gap: 10px; justify-content: flex-start; width: auto; flex-wrap: nowrap; align-items: center; }
+   .reply-link-wrap { display: flex; justify-content: flex-start; width: auto; flex-wrap: nowrap; align-items: center; gap: 4px; }
 
    .btn-reply,
    .btn-reply-disabled { flex: 0 0 auto; width: auto; padding: 0.35rem 0.8rem; font-size: 0.72rem; }
