@@ -411,25 +411,25 @@
 
    .vote-btn { padding: 0.32rem 0.7rem; font-size: 0.8rem; }
 
-   .conclusion-btn { font-size: 0.8rem; padding: 0.5rem 0.6rem; }
+   .conclusion-btn { width: 100%; box-sizing: border-box; margin: 0.4rem 0 0 0; }
 
    .comment-actions { gap: 0.4rem; flex-wrap: wrap; }
 
+   .delete-form { display: block; width: 100%; margin: 0; }
+
    .btn-edit,
    .btn-delete-reply {
-       font-size: 0.75rem;
-       padding: 0.4rem 0.8rem;
-       flex: 1 1 auto;
+       width: 100%;
+       box-sizing: border-box;
+       margin: 0;
+       display: block;
        text-align: center;
-       justify-content: center;
-       min-height: 34px; 
    }
 
-   .reply-link-wrap { gap: 10px; align-items: center; flex-wrap: nowrap; }
+   .reply-link-wrap { gap: 10px; justify-content: flex-start; width: auto; flex-wrap: nowrap; align-items: center; }
 
-   .btn-reply { font-size: 0.75rem; padding: 0.4rem 0.9rem; flex: 0 1 auto; min-height: 32px; justify-content: center; white-space: nowrap; }
-
-   .btn-reply-disabled { flex: 0 1 auto; white-space: nowrap; }
+   .btn-reply,
+   .btn-reply-disabled { flex: 0 0 auto; width: auto; padding: 0.35rem 0.8rem; font-size: 0.72rem; }
 
    .reply-toggle-switch { flex-shrink: 0; width: 36px; height: 20px; }
 
@@ -457,7 +457,7 @@
     .reply-link-wrap { justify-content: space-between; width: 100%; }
 
     .btn-reply,
-    .btn-reply-disabled { flex: 1 1 auto; text-align: center; }
+    .btn-reply-disabled { flex: 0 0 auto; width: auto; padding: 0.35rem 0.8rem; font-size: 0.72rem; }
 
     .vote-btn { padding: 0.3rem 0.6rem; font-size: 0.76rem; }
 
