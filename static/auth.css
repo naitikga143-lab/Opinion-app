@@ -102,3 +102,5 @@
     color: #e85a5a;
     font-size: 0.85rem;
 }
+
+.auth-note { font-size: 0.85rem; color: var(--gold); text-align: center; margin: 0.8rem auto 1.2rem; max-width: 90%; line-height: 1.5; } 
