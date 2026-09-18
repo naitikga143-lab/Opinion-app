@@ -12,7 +12,7 @@ def init_db():
 
     c.execute('''
         CREATE TABLE IF NOT EXISTS users (
-            id SERIAL PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id TEXT UNIQUE,
             nickname TEXT UNIQUE NOT NULL,
             email TEXT UNIQUE NOT NULL,
