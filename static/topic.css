@@ -84,7 +84,7 @@
 
 .issue-card:hover { border-color: var(--gold); }
 
-.issue-number { color: var(--gold); font-weight: bold; font-size: 0.95rem; min-width: 24px; }
+.issue-number { color: var(--gold); font-weight: bold; font-size: 0.95rem; min-width: 24px; margin: 0;}
 
 .issue-content { display: flex; flex-direction: column; gap: 0.5rem; flex: 1; }
 
@@ -397,6 +397,7 @@
     max-width: max-content;
     font-size: 0.62rem;
     padding: 0.22rem 0.55rem;
+    margin: 0;
   }
 }
 
@@ -442,6 +443,7 @@
     max-width: max-content;
     font-size: 0.62rem;
     padding: 0.22rem 0.55rem;
+    margin: 0;
   }
 
   .btn-edit, .btn-delete {
