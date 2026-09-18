@@ -379,19 +379,96 @@
 
 .fab-blue { background: var(--accent); color: var(--white); box-shadow: 0 6px 18px rgba(47, 123, 232, 0.45); }
 
+/* ===== RESPONSIVE FIXES ===== */
+
+@media (max-width: 768px) {
+  .topic-detail { padding: 0 1.2rem; margin: 1.8rem auto; }
+  .topic-detail h1 { font-size: 1.85rem; }
+
+  .issue-card { padding: 1rem 1.1rem; padding-top: 2.4rem; }
+
+  .btn-report {
+    position: absolute;
+    top: 0.7rem;
+    right: 0.9rem;
+  }
+}
+
 @media (max-width: 600px) {
-    .topic-detail { padding: 0 1rem; margin: 1.5rem auto; }
+  .topic-detail { padding: 0 1rem; margin: 1.5rem auto; }
+  .topic-detail h1 { font-size: 1.6rem; }
+  .topic-full-desc { font-size: 0.95rem; }
 
-    .topic-detail h1 { font-size: 1.7rem; }
+  .issues-title { font-size: 1rem; margin: 1.6rem 0 1rem; }
 
-    .issue-card { padding: 1rem; margin: auto; }
+  .issue-card {
+    padding: 1rem;
+    padding-top: 2.6rem;
+    margin: auto;
+    position: relative;
+  }
 
-    .upvote-container { justify-content: stretch; }
+  .issue-content p { font-size: 0.93rem; }
 
-    .upvote-btn { width: 100%; justify-content: center; }
+  /* action buttons ko wrap + stack karo */
+  .issue-content > small,
+  .edit-form,
+  .upvote-container {
+    flex-wrap: wrap;
+  }
 
-    .btn-comment,
-    .btn-report { width: 100%; margin: 0.35rem 0; }
+  .upvote-container { justify-content: stretch; margin-top: 0.6rem; }
+  .upvote-btn { width: 100%; justify-content: center; }
 
-    .fab-btn { bottom: 1.2rem; right: 1.2rem; width: 50px; height: 50px; }
+  .btn-comment,
+  .btn-report {
+    width: 100%;
+    margin: 0.3rem 0;
+    justify-content: center;
+  }
+
+  .btn-report {
+    position: static;   /* mobile pe absolute hatao, warna overlap hota */
+    top: unset;
+    right: unset;
+  }
+
+  .btn-edit, .btn-delete {
+    width: 100%;
+    text-align: center;
+    margin: 0.3rem 0;
+  }
+
+  .btn-conclusion-toggle {
+    font-size: 0.85rem;
+    padding: 0.6rem 0.8rem;
+  }
+
+  .conclusion-item {
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .conclusion-rank { min-width: unset; }
+
+  /* modal chhote screen pe cramped na lage */
+  .modal {
+    width: 92%;
+    padding: 1.2rem;
+    max-width: 92%;
+  }
+
+  .modal h2 { font-size: 1.1rem; }
+  .modal textarea { min-height: 90px; font-size: 0.88rem; }
+
+  .fab-btn { bottom: 1.2rem; right: 1.2rem; width: 50px; height: 50px; }
+}
+
+@media (max-width: 380px) {
+  .topic-detail h1 { font-size: 1.4rem; }
+  .issue-card { padding-top: 2.8rem; }
+  .btn-comment, .btn-report, .btn-edit, .btn-delete {
+    font-size: 0.75rem;
+    padding: 6px 10px;
+  }
 }
