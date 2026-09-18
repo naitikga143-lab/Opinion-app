@@ -85,7 +85,7 @@
 
 .issue-card:hover { border-color: var(--gold); }
 
-.issue-number { color: var(--gold); font-weight: bold; font-size: 0.95rem; min-width: 24px; margin: 0;}
+.issue-number { color: var(--gold); font-weight: bold; font-size: 0.95rem; min-width: 24px; margin: 0; position: absolute; top: 1.2rem; left: 1.4rem; } 
 
 .issue-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
 
@@ -226,7 +226,7 @@
 .btn-comment:hover { background: var(--accent); color: var(--white); }
 
 .btn-report {
-    position: absolute;
+    position: relative;
     top: 0.9rem;
     right: 1.2rem;
     display: inline-flex;
