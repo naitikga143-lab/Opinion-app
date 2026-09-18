@@ -69,6 +69,8 @@
 
 .issue-card {
     scroll-margin-top: 90px;
+    align-items: center;
+    justify-content: space-between;
     position: relative;
     background: var(--black);
     border: 1px solid var(--gray);
@@ -76,7 +78,7 @@
     padding: 1.2rem 1.4rem;
     display: flex;
     gap: 1rem;
-    flex-direction: column;
+    flex-direction: row;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     transition: border-color 0.2s ease;
 }
