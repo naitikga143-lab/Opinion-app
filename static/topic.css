@@ -85,6 +85,10 @@
 
 .issue-number { color: var(--gold); font-weight: bold; font-size: 0.95rem; min-width: 24px; margin: 0;}
 
+.issue-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
+
+.issue-header .issue-number { margin: 0; }
+
 .issue-content { display: flex; flex-direction: column; gap: 0.5rem; flex: 1; }
 
 .issue-content p { color: var(--white); line-height: 1.65; font-size: 1rem; margin: 0; }

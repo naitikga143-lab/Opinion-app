@@ -56,8 +56,17 @@
         {% if issues %}
             <div class="issues-list">
                 {% for issue in issues %}
-                <div class="issue-card" id="issue-{{ issue[0] }}">
-                    <span class="issue-number">{{ loop.index }}.</span>
+                <div class="issue-header">
+                    <div class="issue-card" id="issue-{{ issue[0] }}">
+                        <span class="issue-number">{{ loop.index }}.</span>
+                        <button type="button" class="btn-report"
+                            data-type="issue"
+                            data-id="{{ issue[0] }}"
+                            data-content="{{ issue[3] }}"
+                            data-postedby="{{ issue[2] }}"
+                            onclick="handleReportClick(this)">Report</button>
+                    </div>
+                </div>
                     <div class="issue-content">
                         <p>{{ issue[3] }}</p>
                         <small><a href="/profile/{{ issue[2] }}" class="comment-user">@{{ issue[2] }}</a> . {{ time_ago_issues(issue[4]) }}</small>
@@ -99,13 +108,7 @@
                     </div>
 
                         <a href="/discuss/topic/{{ topic[0] }}/issue/{{ issue[0] }}" class="btn-comment">Comment</a>
-                        <button type="button" class="btn-report"
-                            data-type="issue"
-                            data-id="{{ issue[0] }}"
-                            data-content="{{ issue[3] }}"
-                            data-postedby="{{ issue[2] }}"
-                            onclick="handleReportClick(this)">Report</button>
-                    </div>
+                        
                 </div>
                 {% endfor %}
             </div>
