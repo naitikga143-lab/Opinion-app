@@ -226,6 +226,9 @@
 .btn-comment:hover { background: var(--accent); color: var(--white); }
 
 .btn-report {
+    position: absolute;
+    top: 0.9rem;
+    right: 1.2rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
