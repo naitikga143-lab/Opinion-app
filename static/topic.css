@@ -312,7 +312,7 @@
 
 .modal-overlay.active { display: block; }
 
-.modal-close { float: right; background: none; border: none; color: var(--gray); font-size: 1.2rem; cursor: pointer; transition: color 0.2s ease; }
+.modal-close { float: right; background: none; border: none; color: var(--white); font-size: 1.2rem; cursor: pointer; transition: color 0.2s ease; }
 
 .modal-close:hover { color: var(--gold); }
 
@@ -389,8 +389,12 @@
 
   .btn-report {
     position: absolute;
-    top: 0.7rem;
+    top: 0.8rem;
     right: 0.9rem;
+    width: auto;
+    font-size: 0.68rem;
+    padding: 3px 10px;
+    margin: 0;
   }
 }
 
