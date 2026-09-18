@@ -79,7 +79,6 @@
     flex-direction: column;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     transition: border-color 0.2s ease;
-    padding-top: 2.2rem;
 }
 
 .issue-card:hover { border-color: var(--gold); }
@@ -483,17 +482,5 @@
   .btn-comment, .btn-report, .btn-edit, .btn-delete {
     font-size: 0.75rem;
     padding: 6px 10px;
-  }
-
-  .btn-report {
-    position: absolute;
-       top: 0.7rem;
-       right: 0.7rem;
-       left: auto;
-       bottom: auto;
-       width: auto;
-       max-width: max-content;
-       font-size: 0.62rem;
-       padding: 0.22rem 0.55rem;
   }
 }
