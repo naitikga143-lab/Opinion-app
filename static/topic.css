@@ -424,8 +424,7 @@
   .upvote-container { justify-content: stretch; margin-top: 0.6rem; }
   .upvote-btn { width: 100%; justify-content: center; }
 
-  .btn-comment,
-  .btn-report {
+  .btn-comment {
     width: 100%;
     margin: 0.3rem 0;
     justify-content: center;
