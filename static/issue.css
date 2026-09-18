@@ -454,7 +454,7 @@
     .btn-edit,
     .btn-delete-reply { width: 100%; }
 
-    .reply-link-wrap { justify-content: space-between; width: 100%; }
+    .reply-link-wrap { justify-content: flex-start; width: auto; }
 
     .btn-reply,
     .btn-reply-disabled { flex: 0 0 auto; width: auto; padding: 0.35rem 0.8rem; font-size: 0.72rem; }
