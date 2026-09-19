@@ -62,6 +62,8 @@ def court_keep(entry_id):
 
 @court_bp.route('/court/goto/<item_type>/<int:item_id>')
 def court_goto(item_type, item_id):
+    if not session.get('nickname'):
+        return redirect('/auth')
     conn = sqlite3.connect(DB)
     c = conn.cursor()
 

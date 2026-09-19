@@ -15,7 +15,7 @@ topic_bp = Blueprint('topic', __name__)
 @topic_bp.route('/discuss/topic/<int:topic_id>')
 def topic_detail(topic_id):
     if not session.get('nickname'):
-        return render_template('index.html', show_toast=True)
+        return redirect('/auth')
     
     topic = get_topic_by_id(topic_id)
     if not topic:

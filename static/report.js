@@ -20,8 +20,15 @@ function openReportModal(type, id, content, postedBy) {
     currentPostedBy = postedBy;
 
     fetch(`/report/${type}/${id}`)
-        .then(res => res.text())
+        .then(res => {
+            if (res.redirected && res.url.includes('/auth')) {
+                window.location.href = '/auth';
+                return null;
+            }
+            return res.text();
+        })
         .then(html => {
+            if (html === null) return;
             document.getElementById('reportContent').innerHTML = html;
             document.getElementById('reportModal').classList.add('active');
             document.getElementById('modalOverlay').classList.add('active');
@@ -96,6 +103,10 @@ function confirmReportSubmit() {
         })
     })
     .then(res => {
+        if (res.status === 401) {
+            window.location.href = '/auth';
+            return new Promise(() => {});
+        }
         if (!res.ok) {
             return res.json().then(data => { throw new Error(data.message || `Server error: ${res.status}`); });
         }

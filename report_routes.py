@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, jsonify, session
+from flask import Blueprint, render_template, request, jsonify, session, redirect
 from court_model import is_already_reported, add_court_entry
 from message_model import notify_with_checkpoint
 
@@ -6,13 +6,16 @@ report_bp = Blueprint('report_bp', __name__)
 
 @report_bp.route('/report/<target_type>/<int:target_id>')
 def report_page(target_type, target_id):
+    if not session.get('nickname'):
+            return redirect('/auth')
     return render_template('report.html', target_type=target_type, target_id=target_id)
 
 @report_bp.route('/report/submit', methods=['POST'])
 def submit_report():
-    print("REPORT HIT!")
+    if not session.get('nickname'):
+        return jsonify(success=False, message='Login required'), 401
+    
     data = request.get_json()
-    print("RECIEVED DATA:", data)
     item_type = data.get('item_type')
     item_id = data.get('item_id')
     category = data.get('category')
