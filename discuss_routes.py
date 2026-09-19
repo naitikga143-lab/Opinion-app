@@ -7,9 +7,6 @@ discuss_bp = Blueprint('discuss', __name__)
 
 @discuss_bp.route('/discuss')
 def discuss():
-    if not session.get('nickname'):
-        return render_template('index.html', show_toast=True)
-    
     topics = get_all_topics()
     return render_template('discuss.html', topics=topics)
 

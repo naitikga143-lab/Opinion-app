@@ -7,15 +7,6 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
 </head>
 
-{% if show_toast %}
-<div id="toast" style="position: fixed;bottom: 2rem;left: 50%;transform: translateX(-50%);background: #1a1a1a;border: 1px solid #e83a2f;color: #f5f0e8;padding: 1rem 2rem;border-radius: 4px;z-index: 999;font-family: Georgia,serif;">
-  discussion mein participate karne ke liye login karein! 🔒
-</div>
-<script>
-  setTimeout(() => { window.location.href = '/auth'; }, 2000);
-</script>
-{% endif %}
-
 <body>
   <nav>
     <div class="logo">

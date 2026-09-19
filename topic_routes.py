@@ -8,6 +8,8 @@ from issue_model import(
 from message_model import notify_with_checkpoint
 from topic_model import get_topic_by_id, record_interaction
 
+from trending_model import record_click
+
 topic_bp = Blueprint('topic', __name__)
 
 @topic_bp.route('/discuss/topic/<int:topic_id>')
@@ -19,7 +21,7 @@ def topic_detail(topic_id):
     if not topic:
         return redirect('/discuss')
     
-    record_interaction(session['nickname'], topic_id, 'click', 1)
+    record_click(session['nickname'], topic_id, 'topic', topic_id)
     
     issues = get_issues_sorted_by_votes(topic_id)
     votes_data = {}

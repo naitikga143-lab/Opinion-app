@@ -15,6 +15,7 @@ from reply_routes import reply_bp
 from report_routes import report_bp
 from court_routes import court_bp
 from trending_routes import trending_bp
+from trending_model import add_interaction_target_columns
 from setup_db import init_issue_votes_table, run_migrations
 from court_model import init_court_table, init_court_reasons_table, init_court_setting_table, init_notifications_table, init_court_delete_votes_table
 from reply_model import (
@@ -76,6 +77,7 @@ init_court_delete_votes_table()
 init_message_tables()
 init_interactions_table()
 init_follows_table()
+add_interaction_target_columns()
 
 
 app.register_blueprint(admin_bp)

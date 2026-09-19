@@ -74,3 +74,55 @@ def get_most_clicked_topics(limit=20, period='all'):
             'click_count': r[5] or 0
         })
     return topics
+
+def add_interaction_target_columns():
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("PRAGMA table_info(user_interactions)")
+    cols = [r[1] for r in c.fetchall()]
+    if 'target_type' not in cols:
+        c.execute("ALTER TABLE user_interactions ADD COLUMN target_type TEXT DEFAULT 'topic'")
+    if 'target_id' not in cols:
+        c.execute("ALTER TABLE user_interactions ADD COLUMN target_id INTEGER")
+    c.execute("UPDATE user_interactions SET target_id = topic_id WHERE target_id IS NULL")
+    conn.commit()
+    conn.close()
+
+CLICK_COOLDOWN = '-1 hour'
+
+def record_click(nickname, topic_id, target_type='topic', target_id=None):
+    if target_id is None:
+        target_id = topic_id
+
+    conn = get_db()
+    c = conn.cursor()
+    try:
+        if target_type == 'issue':
+            c.execute("SELECT nickname FROM issues WHERE id = ?", (target_id,))
+        else:
+            c.execute("SELECT nickname FROM topics WHERE id = ?", (target_id,))
+        row = c.fetchone()
+        if not row or row[0] == nickname:
+            return False
+
+        c.execute('''
+            SELECT 1 FROM user_interactions
+            WHERE nickname = ?
+              AND action = 'click' 
+              AND target_type = ?
+              AND target_id = ?
+              AND created_at >= datetime('now', ?)
+            LIMIT 1
+        ''', (nickname, target_type, target_id, CLICK_COOLDOWN))
+        if c.fetchone():
+            return False
+
+        c.execute('''
+            INSERT INTO user_interactions
+                (nickname, topic_id, action, weight, target_type, target_id)
+            VALUES (?, ?, 'click', 1, ?, ?)
+        ''', (nickname, topic_id, target_type, target_id))
+        conn.commit()
+        return True
+    finally:
+        conn.close()

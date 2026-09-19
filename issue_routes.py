@@ -19,6 +19,7 @@ from comment_model import (
 from message_model import notify_with_checkpoint
 import re
 import unicodedata
+from trending_model import record_click
 
 issue_bp = Blueprint('issue_bp', __name__)
 
@@ -32,7 +33,7 @@ def issue_detail(topic_id,  issue_id):
     if not topic or not issue:
         return redirect('/discuss')
 
-    record_interaction(session['nickname'], topic_id, 'click', 1)
+    record_click(session['nickname'], topic_id, 'issue', issue_id)
     
     comments = get_comments(issue_id)
     comments_data = []
