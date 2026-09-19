@@ -218,9 +218,13 @@ def time_ago_comments(timestamp_str):
         created = timestamp_str
     else:
         try:
-            created = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:?")
+            created = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S")
         except ValueError:
-            created = datetime.fromisoformat(timestamp_str)
+            try:
+                created = datetime.fromisoformat(timestamp_str, "%Y-%m-%d %H:%M:%S.%f")
+            except ValueError:
+                created = datetime.fromisoformat(timestamp_str)
+        
     diff = datetime.utcnow() - created
 
     if diff.total_seconds() < 0:

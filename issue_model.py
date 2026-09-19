@@ -127,7 +127,7 @@ def add_vote(issue_id,  nickname, vote):
         existing = c.fetchone()
 
         if existing:
-            if existing[0] == vote:
+            if str(existing[0]) == str(vote):
                 c.execute('DELETE FROM issue_votes WHERE issue_id = ? AND nickname = ?', (issue_id, nickname))
                 action = 'removed'
             else:
@@ -215,9 +215,12 @@ def time_ago_issues(timestamp_str):
         created = timestamp_str
     else:
         try:
-            created = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:?")
+            created = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S")
         except ValueError:
-            created = datetime.fromisoformat(timestamp_str)
+            try:
+                created = datetime.fromisoformat(timestamp_str, "%Y-%m-%d %H:%M:%S.%f")
+            except ValueError:
+                created = datetime.fromisoformat(timestamp_str)
 
     diff = datetime.utcnow() - created
 
