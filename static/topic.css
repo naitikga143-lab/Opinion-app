@@ -70,24 +70,22 @@
 .issue-card {
     scroll-margin-top: 90px;
     position: relative;
-    justify-content: space-between;
-    align-items: flex-start;
     background: var(--black);
     border: 1px solid var(--gray);
     border-radius: 10px;
     padding: 1.2rem 1.4rem;
     display: flex;
     gap: 1rem;
-    flex-direction: row;
+    flex-direction: column;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     transition: border-color 0.2s ease;
 }
 
 .issue-card:hover { border-color: var(--gold); }
 
-.issue-number { color: var(--gold); font-weight: bold; font-size: 0.95rem; min-width: 24px; margin: 0; position: absolute; top: 1.2rem; left: 1.4rem; } 
+.issue-number { color: var(--gold); font-weight: bold; font-size: 0.95rem; margin: 0; } 
 
-.issue-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
+.issue-header { display: flex; align-items: center; justify-content: space-between; }
 
 .issue-header .issue-number { margin: 0; }
 
@@ -226,9 +224,6 @@
 .btn-comment:hover { background: var(--accent); color: var(--white); }
 
 .btn-report {
-    position: absolute;
-    top: 0.9rem;
-    right: 1.2rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -391,13 +386,6 @@
   .topic-detail h1 { font-size: 1.85rem; }
 
   .issue-card { padding: 1rem 1.1rem; }
-
-  .btn-report {
-    max-width: max-content;
-    font-size: 0.62rem;
-    padding: 0.22rem 0.55rem;
-    margin: 0;
-  }
 }
 
 @media (max-width: 600px) {
@@ -409,7 +397,6 @@
 
   .issue-card {
     padding: 1rem;
-    margin: auto;
     position: relative;
   }
 
@@ -429,13 +416,6 @@
     width: 100%;
     margin: 0.3rem 0;
     justify-content: center;
-  }
-
-  .btn-report {
-    max-width: max-content;
-    font-size: 0.62rem;
-    padding: 0.22rem 0.55rem;
-    margin: 0;
   }
 
   .btn-edit, .btn-delete {
@@ -471,8 +451,7 @@
 
 @media (max-width: 380px) {
   .topic-detail h1 { font-size: 1.4rem; }
-  .issue-card { padding-top: 2.8rem; }
-  .btn-comment, .btn-report, .btn-edit, .btn-delete {
+  .btn-comment, .btn-edit, .btn-delete {
     font-size: 0.75rem;
     padding: 6px 10px;
   }

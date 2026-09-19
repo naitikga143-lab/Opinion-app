@@ -56,8 +56,8 @@
         {% if issues %}
             <div class="issues-list">
                 {% for issue in issues %}
-                <div class="issue-header">
-                    <div class="issue-card" id="issue-{{ issue[0] }}">
+                <div class="issue-card" id="issue-{{ issue[0] }}">
+                    <div class="issue-header">
                         <span class="issue-number">{{ loop.index }}.</span>
                         <button type="button" class="btn-report"
                             data-type="issue"
@@ -66,7 +66,7 @@
                             data-postedby="{{ issue[2] }}"
                             onclick="handleReportClick(this)">Report</button>
                     </div>
-                </div>
+                
                     <div class="issue-content">
                         <p>{{ issue[3] }}</p>
                         <small><a href="/profile/{{ issue[2] }}" class="comment-user">@{{ issue[2] }}</a> . {{ time_ago_issues(issue[4]) }}</small>
