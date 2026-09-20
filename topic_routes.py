@@ -18,15 +18,18 @@ def topic_detail(topic_id):
     topic = get_topic_by_id(topic_id)
     if not topic:
         return redirect('/discuss')
-    
-    record_click(session['nickname'], topic_id, 'topic', topic_id)
+
+    nickname = session.get('nickname')
+
+    if nickname:
+        record_click(nickname, topic_id, 'topic', topic_id)
     
     issues = get_issues_sorted_by_votes(topic_id)
     votes_data = {}
     user_votes = {}
     for issue in issues:
         votes_data[issue[0]] = get_votes_for_issue(issue[0])
-        user_votes[issue[0]] = get_user_vote_for_issues(issue[0], session['nickname'])
+        user_votes[issue[0]] = get_user_vote_for_issues(issue[0], nickname) if nickname else None
 
     return render_template('topic.html', topic=topic, issues=issues,
                            votes_data=votes_data, user_votes=user_votes)

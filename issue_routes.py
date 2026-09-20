@@ -31,13 +31,16 @@ def issue_detail(topic_id,  issue_id):
     if not topic or not issue:
         return redirect('/discuss')
 
-    record_click(session['nickname'], topic_id, 'issue', issue_id)
+    nickname = session.get('nickname')
+
+    if nickname:
+        record_click(nickname, topic_id, 'issue', issue_id)
     
     comments = get_comments(issue_id)
     comments_data = []
     for comment in comments:
         likes, dislikes = get_votes(comment[0])
-        user_vote = get_user_vote(comment[0], session['nickname'])
+        user_vote = get_user_vote(comment[0], nickname)
         comments_data.append({
             'id': comment[0],
             'nickname': comment[3],
@@ -47,7 +50,7 @@ def issue_detail(topic_id,  issue_id):
             'user_vote': user_vote,
             'edited': comment[8],
             'conclusion_count': get_conclusion_count(comment[0]),
-            'user_supported_conclusion': has_supported_conclusion(comment[0], session['nickname']),
+            'user_supported_conclusion': has_supported_conclusion(comment[0], nickname) if nickname else False,
             'replies_enabled': comment[6],
             'created_at': comment[5]
         })
