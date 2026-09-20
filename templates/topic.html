@@ -97,18 +97,18 @@
                         </div>
                         {% endif %}
 
-                    {% set v = votes_data[issue[0]] %}
-                    {% set uv = user_votes[issue[0]] %}
+                        {% set v = votes_data[issue[0]] %}
+                        {% set uv = user_votes[issue[0]] %}
 
-                    <div class="upvote-container">
+                        <div class="upvote-container">
                            <form method="POST" action="/discuss/topic/{{ topic[0] }}/issue/{{ issue[0] }}/vote" class="vote-form" data-issue-id="{{ issue[0] }}">
                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                <button type="submit" name="vote" value="upvote" class="upvote-btn {{ 'voted' if uv else '' }}">🔺 {{ v.total }}</button>
                            </form>
-                    </div>
+                        </div>
 
                         <a href="/discuss/topic/{{ topic[0] }}/issue/{{ issue[0] }}" class="btn-comment">Comment</a>
-                        
+                    </div>    
                 </div>
                 {% endfor %}
             </div>
