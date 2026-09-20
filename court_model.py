@@ -308,7 +308,7 @@ def _perform_court_auto_delete(entry_id, item_type, item_id, posted_by):
 def mark_notifications_read(nickname):
     conn = get_db()
     c = conn.cursor()
-    now = datetime.now().strftime('%Y-%m-%d %H:%M:?')
+    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     c.execute('UPDATE notifications SET is_read=1, read_at=? WHERE nickname=? AND is_read=0', (now, nickname,))
     conn.commit()
     conn.close()
@@ -339,7 +339,7 @@ def auto_retain_expired_entries():
 
     for entry_id, item_type, item_id, created_at in entries:
         try:
-            created_dt = datetime.strptime(created_at, '%Y-%m-%d %H:%M:?')
+            created_dt = datetime.strptime(created_at, '%Y-%m-%d %H:%M:%S')
         except (ValueError, TypeError):
             continue
         if created_dt <= cutoff:
@@ -350,7 +350,7 @@ def get_all_notifications(nickname):
     c = conn.cursor()
 
     cutoff = datetime.now() - timedelta(days=3)
-    cutoff_str = cutoff.strftime('%Y-%m-%d %H:%M:?')
+    cutoff_str = cutoff.strftime('%Y-%m-%d %H:%M:%S')
     c.execute("""
         DELETE FROM notifications
         WHERE nickname=? AND is_read=1

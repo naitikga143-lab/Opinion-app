@@ -25,8 +25,6 @@ issue_bp = Blueprint('issue_bp', __name__)
 
 @issue_bp.route('/discuss/topic/<int:topic_id>/issue/<int:issue_id>')
 def issue_detail(topic_id,  issue_id):
-    if not session.get('nickname'):
-        return render_template('index.html', toast=True)
     
     topic = get_topic_by_id(topic_id)
     issue = get_issue_by_id(issue_id)
